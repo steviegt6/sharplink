@@ -56,7 +56,7 @@ public sealed class HlCode {
     }
 
     public HlType GetHlType(int index) {
-        if (index < 0 || index >= Types.Count) {
+        if (index < 0 || index >= Math.Max(Types.Count, Types.Capacity)) {
             Console.WriteLine("Invalid type index.");
             index = 0;
         }
@@ -65,7 +65,7 @@ public sealed class HlCode {
     }
 
     public HlTypeRef GetHlTypeRef(int index) {
-        if (index < 0 || index >= Types.Count) {
+        if (index < 0 || index >= Math.Max(Types.Count, Types.Capacity)) {
             Console.WriteLine("Invalid type index.");
             index = 0;
         }
@@ -180,7 +180,7 @@ public sealed class HlCode {
 
             for (var j = 0; j < nAssigns; j++) {
                 _ = reader.ReadUIndex();
-                _ = reader.ReadUIndex();
+                _ = reader.ReadIndex();
             }
         }
 
