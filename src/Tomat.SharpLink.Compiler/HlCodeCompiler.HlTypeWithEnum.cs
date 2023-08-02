@@ -1,14 +1,18 @@
-﻿using Mono.Cecil;
+﻿using System.Collections.Generic;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) { }
+    private Dictionary<HlTypeWithEnum, TypeDefinition> enumDefs = new();
+    private Dictionary<HlTypeWithEnum, MethodDefinition> enumBaseCtorDefs = new();
+    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, TypeDefinition>> enumConstructDefs = new();
+    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, MethodDefinition>> enumConstructCtorDefs = new();
+    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, List<FieldDefinition>>> enumConstructFieldDefs = new();
+    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, List<ParameterDefinition>>> enumConstructCtorParamDefs = new();
 
-    private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) { }
-
-    private void CompileHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
+    private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Enum.Name, out var enumNs, out var enumName);
         var enumDef = new TypeDefinition(
             enumNs ?? "",
@@ -19,9 +23,13 @@ partial class HlCodeCompiler {
           | TypeAttributes.Abstract,
             asmDef.MainModule.TypeSystem.Object
         );
-        asmDef.MainModule.Types.Add(enumDef);
+        enumDefs.Add(type, enumDef);
+    }
 
-        var enumCtor = new MethodDefinition(
+    private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
+        var enumDef = enumDefs[type];
+
+        var enumBaseCtor = new MethodDefinition(
             ".ctor",
             MethodAttributes.Family
           | MethodAttributes.HideBySig
@@ -29,23 +37,22 @@ partial class HlCodeCompiler {
           | MethodAttributes.SpecialName,
             asmDef.MainModule.TypeSystem.Void
         );
-        enumDef.Methods.Add(enumCtor);
-        var enumCtorIl = enumCtor.Body.GetILProcessor();
-        enumCtorIl.Emit(OpCodes.Ldarg_0);
-        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(enumDef.BaseType)));
-        enumCtorIl.Emit(OpCodes.Ret);
+        enumBaseCtorDefs.Add(type, enumBaseCtor);
+        enumConstructDefs.Add(type, new Dictionary<HlEnumConstruct, TypeDefinition>());
+        enumConstructCtorDefs.Add(type, new Dictionary<HlEnumConstruct, MethodDefinition>());
+        enumConstructFieldDefs.Add(type, new Dictionary<HlEnumConstruct, List<FieldDefinition>>());
+        enumConstructCtorParamDefs.Add(type, new Dictionary<HlEnumConstruct, List<ParameterDefinition>>());
 
         foreach (var construct in type.Enum.Constructs) {
             var nestedType = new TypeDefinition(
-                enumNs ?? "",
+                enumDef.Namespace ?? "",
                 construct.Name,
                 TypeAttributes.AnsiClass
               | TypeAttributes.BeforeFieldInit
               | TypeAttributes.NestedPublic,
                 enumDef
             );
-            // asmDef.MainModule.Types.Add(nestedType);
-            enumDef.NestedTypes.Add(nestedType);
+            enumConstructDefs[type].Add(construct, nestedType);
 
             var nestedCtor = new MethodDefinition(
                 ".ctor",
@@ -55,10 +62,10 @@ partial class HlCodeCompiler {
               | MethodAttributes.SpecialName,
                 asmDef.MainModule.TypeSystem.Void
             );
-            nestedType.Methods.Add(nestedCtor);
-            var nestedCtorIl = nestedCtor.Body.GetILProcessor();
-            nestedCtorIl.Emit(OpCodes.Ldarg_0);
-            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(nestedType.BaseType)));
+            enumConstructCtorDefs[type].Add(construct, nestedCtor);
+
+            var fieldDefs = enumConstructFieldDefs[type][construct] = new List<FieldDefinition>();
+            var paramDefs = enumConstructCtorParamDefs[type][construct] = new List<ParameterDefinition>();
 
             var paramNumber = 0;
 
@@ -69,16 +76,48 @@ partial class HlCodeCompiler {
                     FieldAttributes.Public,
                     TypeReferenceFromHlTypeRef(param, asmDef)
                 );
-                nestedType.Fields.Add(fieldDef);
+                fieldDefs.Add(fieldDef);
 
                 var paramDef = new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType);
+                paramDefs.Add(paramDef);
+
+                paramNumber++;
+            }
+        }
+    }
+
+    private void CompileHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
+        var enumDef = enumDefs[type];
+        asmDef.MainModule.Types.Add(enumDef);
+
+        var enumBaseCtor = enumBaseCtorDefs[type];
+        enumDef.Methods.Add(enumBaseCtor);
+
+        var enumCtorIl = enumBaseCtor.Body.GetILProcessor();
+        enumCtorIl.Emit(OpCodes.Ldarg_0);
+        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(enumDef.BaseType)));
+        enumCtorIl.Emit(OpCodes.Ret);
+
+        foreach (var construct in type.Enum.Constructs) {
+            var nestedType = enumConstructDefs[type][construct];
+            enumDef.NestedTypes.Add(nestedType);
+
+            var nestedCtor = enumConstructCtorDefs[type][construct];
+            nestedType.Methods.Add(nestedCtor);
+            var nestedCtorIl = nestedCtor.Body.GetILProcessor();
+            nestedCtorIl.Emit(OpCodes.Ldarg_0);
+            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(nestedType.BaseType)));
+
+            for (var i = 0; i < construct.Params.Length; i++) {
+                var fieldDef = enumConstructFieldDefs[type][construct][i];
+                nestedType.Fields.Add(fieldDef);
+
+                var paramDef = enumConstructCtorParamDefs[type][construct][i];
                 nestedCtor.Parameters.Add(paramDef);
 
                 nestedCtorIl.Emit(OpCodes.Ldarg_0);
                 nestedCtorIl.Emit(OpCodes.Ldarg, paramDef);
                 nestedCtorIl.Emit(OpCodes.Stfld, fieldDef);
-
-                paramNumber++;
             }
 
             nestedCtorIl.Emit(OpCodes.Ret);
