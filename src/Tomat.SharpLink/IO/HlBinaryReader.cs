@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Tomat.SharpLink.IO;
 
@@ -42,15 +43,6 @@ public sealed class HlBinaryReader {
         return value;
     }
 
-    /*public Memory<byte> ReadBytes(int count) {
-        if (position + count > bytes.Length)
-            throw new IndexOutOfRangeException();
-
-        var value = bytes.AsMemory(position, count);
-        position += count;
-        return value;
-    }*/
-
     public int ReadIndex() {
         var b = ReadByte();
         if ((b & 0x80) == 0)
@@ -87,9 +79,23 @@ public sealed class HlBinaryReader {
         return Read<double>();
     }
 
-    /*public string ReadString() {
-        
-    }*/
+    public List<string> ReadStrings(int count, out List<int> lengths) {
+        var size = ReadInt32();
+        var stringBytes = ReadBytes(size).ToArray();
+        var strings = new List<string>(count);
+        lengths = new List<int>(count);
+
+        var offset = 0;
+
+        for (var i = 0; i < count; i++) {
+            var stringSize = ReadUIndex();
+            strings.Add(Encoding.UTF8.GetString(stringBytes, offset, stringSize));
+            lengths.Add(stringSize);
+            offset += stringSize + 1;
+        }
+
+        return strings;
+    }
 
     public int GenerateHash(string name, bool cache) {
         var h = 0;
@@ -125,18 +131,20 @@ public sealed class HlBinaryReader {
         switch (kind) {
             case HlTypeKind.HFUN:
             case HlTypeKind.HMETHOD: {
-                var nArgs = ReadByte();
-                var fun = new HlTypeFun {
-                    Arguments = new HlTypeRef[nArgs],
-                };
-                for (var i = 0; i < nArgs; i++)
-                    fun.Arguments[i] = code.GetHlTypeRef(ReadIndex());
-                fun.ReturnType = code.GetHlTypeRef(ReadIndex());
+                var argumentCount = ReadByte();
+                var arguments = new HlTypeRef[argumentCount];
+                for (var i = 0; i < argumentCount; i++)
+                    arguments[i] = code.GetHlTypeRef(ReadIndex());
 
-                return new HlTypeWithFun {
-                    Kind = kind,
-                    Fun = fun,
-                };
+                var fun = new HlTypeFun(
+                    arguments: arguments,
+                    returnType: code.GetHlTypeRef(ReadIndex())
+                );
+
+                return new HlTypeWithFun(
+                    kind: kind,
+                    fun: fun
+                );
             }
 
             case HlTypeKind.HOBJ:
@@ -147,33 +155,32 @@ public sealed class HlBinaryReader {
                 var nFields = ReadUIndex();
                 var nProtos = ReadUIndex();
                 var nBindings = ReadUIndex();
-                var obj = new HlTypeObj {
-                    Name = name,
-                    Super = super < 0 ? null : code.GetHlTypeRef(super),
-                    GlobalValue = global,
-                    Fields = new HlObjField[nFields],
-                    Protos = new HlObjProto[nProtos],
-                    Bindings = new int[nBindings * 2],
-                    Runtime = null,
-                };
+                var obj = new HlTypeObj(
+                    name: name,
+                    super: super < 0 ? null : code.GetHlTypeRef(super),
+                    globalValue: global,
+                    fields: new HlObjField[nFields],
+                    protos: new HlObjProto[nProtos],
+                    bindings: new int[nBindings * 2]
+                );
 
                 for (var i = 0; i < nFields; i++) {
                     var fieldName = ReadUString();
-                    obj.Fields[i] = new HlObjField {
-                        Name = fieldName,
-                        HashedName = GenerateHash(fieldName, cache: true),
-                        Type = code.GetHlTypeRef(ReadIndex()),
-                    };
+                    obj.Fields[i] = new HlObjField(
+                        name: fieldName,
+                        hashedName: GenerateHash(fieldName, cache: true),
+                        type: code.GetHlTypeRef(ReadIndex())
+                    );
                 }
 
                 for (var i = 0; i < nProtos; i++) {
                     var protoName = ReadUString();
-                    obj.Protos[i] = new HlObjProto {
-                        Name = protoName,
-                        HashedName = GenerateHash(protoName, cache: true),
-                        FIndex = ReadUIndex(),
-                        PIndex = ReadIndex(),
-                    };
+                    obj.Protos[i] = new HlObjProto(
+                        name: protoName,
+                        hashedName: GenerateHash(protoName, cache: true),
+                        fIndex: ReadUIndex(),
+                        pIndex: ReadIndex()
+                    );
                 }
 
                 for (var i = 0; i < nBindings; i++) {
@@ -181,84 +188,85 @@ public sealed class HlBinaryReader {
                     obj.Bindings[(i << 1) | 1] = ReadUIndex();
                 }
 
-                return new HlTypeWithObj {
-                    Obj = obj,
-                };
+                return new HlTypeWithObj(kind, obj);
             }
 
             case HlTypeKind.HREF: {
-                return new HlTypeWithType {
-                    Kind = kind,
-                    Type = code.GetHlTypeRef(ReadIndex()),
-                };
+                return new HlTypeWithType(
+                    kind: kind,
+                    type: code.GetHlTypeRef(ReadIndex())
+                );
             }
 
             case HlTypeKind.HVIRTUAL: {
                 var nFields = ReadUIndex();
-                var virt = new HlTypeVirtual {
-                    Fields = new HlObjField[nFields],
-                };
+                var virt = new HlTypeVirtual(
+                    fields: new HlObjField[nFields]
+                );
 
                 for (var i = 0; i < nFields; i++) {
                     var name = ReadUString();
-                    virt.Fields[i] = new HlObjField {
-                        Name = name,
-                        HashedName = GenerateHash(name, cache: true),
-                        Type = code.GetHlTypeRef(ReadIndex()),
-                    };
+                    virt.Fields[i] = new HlObjField(
+                        name: name,
+                        hashedName: GenerateHash(name, cache: true),
+                        type: code.GetHlTypeRef(ReadIndex())
+                    );
                 }
 
-                return new HlTypeWithVirtual {
-                    Virtual = virt,
-                };
+                return new HlTypeWithVirtual(
+                    kind: kind,
+                    @virtual: virt
+                );
             }
 
             case HlTypeKind.HABSTRACT: {
-                return new HlTypeWithAbsName {
-                    AbsName = ReadUString(),
-                };
+                return new HlTypeWithAbsName(
+                    kind: kind,
+                    absName: ReadUString()
+                );
             }
 
             case HlTypeKind.HENUM: {
-                var @enum = new HlTypeEnum {
-                    Name = ReadUString(),
-                    GlobalValue = ReadUIndex(),
-                    Constructs = new HlEnumConstruct[ReadUIndex()],
-                };
+                var @enum = new HlTypeEnum(
+                    name: ReadUString(),
+                    globalValue: ReadUIndex(),
+                    constructs: new HlEnumConstruct[ReadUIndex()]
+                );
 
                 for (var i = 0; i < @enum.Constructs.Length; i++) {
                     var name = ReadUString();
                     var nParams = ReadUIndex();
-                    var construct = @enum.Constructs[i] = new HlEnumConstruct {
-                        Name = name,
-                        Params = new HlTypeRef[nParams],
-                        Offsets = new int[nParams],
-                    };
+                    var construct = @enum.Constructs[i] = new HlEnumConstruct(
+                        name: name,
+                        @params: new HlTypeRef[nParams],
+                        offsets: new int[nParams]
+                    );
 
                     for (var j = 0; j < nParams; j++)
                         construct.Params[j] = code.GetHlTypeRef(ReadIndex());
                 }
 
-                return new HlTypeWithEnum {
-                    Enum = @enum,
-                };
+                return new HlTypeWithEnum(
+                    kind: kind,
+                    @enum: @enum
+                );
             }
 
             case HlTypeKind.HNULL:
             case HlTypeKind.HPACKED: {
-                return new HlTypeWithType {
-                    Kind = kind,
-                    Type = code.GetHlTypeRef(ReadIndex()),
-                };
+                return new HlTypeWithType(
+                    kind: kind,
+                    type: code.GetHlTypeRef(ReadIndex())
+                );
             }
 
             default: {
                 if (kind >= HlTypeKind.HLAST)
                     throw new InvalidDataException($"Invalid type kind: {kind}");
 
-                return new HlType {
-                    Kind = kind,
-                };
+                return new HlType(
+                    kind: kind
+                );
             }
         }
     }
@@ -274,12 +282,12 @@ public sealed class HlBinaryReader {
         var opcodes = new HlOpcode[nOps];
         for (var i = 0; i < nOps; i++)
             opcodes[i] = ReadHlOpcode();
-        return new HlFunction {
-            Type = type,
-            FIndex = fIndex,
-            Regs = regs,
-            Opcodes = opcodes,
-        };
+        return new HlFunction(
+            fIndex: fIndex,
+            type: type,
+            regs: regs,
+            opcodes: opcodes
+        );
     }
 
     public HlOpcode ReadHlOpcode() {
@@ -287,50 +295,50 @@ public sealed class HlBinaryReader {
 
         if (kind >= HlOpcodeKind.Last) {
             Console.WriteLine($"Warning: invalid opcode kind: {kind}");
-            return new HlOpcode {
-                Kind = kind,
-            };
+            return new HlOpcode(
+                kind: kind
+            );
         }
 
         switch (kind.GetArgumentCount()) {
             case 0: {
-                return new HlOpcode {
-                    Kind = kind,
-                };
+                return new HlOpcode(
+                    kind: kind
+                );
             }
 
             case 1: {
-                return new HlOpcode {
-                    Kind = kind,
-                    P1 = ReadIndex(),
-                };
+                return new HlOpcode(
+                    kind: kind,
+                    p1: ReadIndex()
+                );
             }
 
             case 2: {
-                return new HlOpcode {
-                    Kind = kind,
-                    P1 = ReadIndex(),
-                    P2 = ReadIndex(),
-                };
+                return new HlOpcode(
+                    kind: kind,
+                    p1: ReadIndex(),
+                    p2: ReadIndex()
+                );
             }
 
             case 3: {
-                return new HlOpcode {
-                    Kind = kind,
-                    P1 = ReadIndex(),
-                    P2 = ReadIndex(),
-                    P3 = ReadIndex(),
-                };
+                return new HlOpcode(
+                    kind: kind,
+                    p1: ReadIndex(),
+                    p2: ReadIndex(),
+                    p3: ReadIndex()
+                );
             }
 
             case 4: {
-                return new HlOpcodeWithP4() {
-                    Kind = kind,
-                    P1 = ReadIndex(),
-                    P2 = ReadIndex(),
-                    P3 = ReadIndex(),
-                    P4 = ReadIndex(),
-                };
+                return new HlOpcodeWithP4(
+                    kind: kind,
+                    p1: ReadIndex(),
+                    p2: ReadIndex(),
+                    p3: ReadIndex(),
+                    p4: ReadIndex()
+                );
             }
 
             case -1: {
@@ -346,13 +354,13 @@ public sealed class HlBinaryReader {
                         var extraParams = new int[p3];
                         for (var i = 0; i < p3; i++)
                             extraParams[i] = ReadIndex();
-                        return new HlOpcodeWithExtraParams {
-                            Kind = kind,
-                            P1 = p1,
-                            P2 = p2,
-                            P3 = p3,
-                            ExtraParams = extraParams,
-                        };
+                        return new HlOpcodeWithExtraParams(
+                            kind: kind,
+                            p1: p1,
+                            p2: p2,
+                            p3: p3,
+                            extraParams: extraParams
+                        );
                     }
 
                     case HlOpcodeKind.Switch: {
@@ -362,13 +370,13 @@ public sealed class HlBinaryReader {
                         for (var i = 0; i < p2; i++)
                             extraParams[i] = ReadUIndex();
                         var p3 = ReadUIndex();
-                        return new HlOpcodeWithExtraParams {
-                            Kind = kind,
-                            P1 = p1,
-                            P2 = p2,
-                            P3 = p3,
-                            ExtraParams = extraParams,
-                        };
+                        return new HlOpcodeWithExtraParams(
+                            kind: kind,
+                            p1: p1,
+                            p2: p2,
+                            p3: p3,
+                            extraParams: extraParams
+                        );
                     }
 
                     default:
@@ -384,13 +392,13 @@ public sealed class HlBinaryReader {
                 var extraParams = new int[size];
                 for (var i = 0; i < size; i++)
                     extraParams[i] = ReadIndex();
-                return new HlOpcodeWithExtraParams {
-                    Kind = kind,
-                    P1 = p1,
-                    P2 = p2,
-                    P3 = p3,
-                    ExtraParams = extraParams,
-                };
+                return new HlOpcodeWithExtraParams(
+                    kind: kind,
+                    p1: p1,
+                    p2: p2,
+                    p3: p3,
+                    extraParams: extraParams
+                );
             }
         }
     }

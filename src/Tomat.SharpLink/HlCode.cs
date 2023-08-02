@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Tomat.SharpLink.IO;
 
 namespace Tomat.SharpLink;
@@ -117,7 +116,7 @@ public sealed class HlCode {
         for (var i = 0; i < floatCount; i++)
             code.Floats.Add(reader.ReadDouble());
 
-        var strings = ReadStrings(reader, stringCount, out var stringLengths);
+        var strings = reader.ReadStrings(stringCount, out var stringLengths);
         code.Strings = strings;
         code.StringLengths = stringLengths;
 
@@ -134,7 +133,7 @@ public sealed class HlCode {
         }
 
         var debugFileCount = code.HasDebug ? reader.ReadUIndex() : 0;
-        var debugFiles = ReadStrings(reader, debugFileCount, out var debugFileLengths);
+        var debugFiles = reader.ReadStrings(debugFileCount, out var debugFileLengths);
         code.DebugFiles = debugFiles;
         code.DebugFileLengths = debugFileLengths;
 
@@ -149,15 +148,17 @@ public sealed class HlCode {
         code.Natives = new List<HlNative>(nativeCount);
 
         for (var i = 0; i < nativeCount; i++) {
-            code.Natives.Add(new HlNative {
-                // In the hashlink source, these use hl_read_string instead, but
-                // we don't make a distinction between strings and ustrings, so
-                // this shouldn't be a concern for us.
-                Lib = code.GetUString(reader.ReadIndex()),
-                Name = code.GetUString(reader.ReadIndex()),
-                T = code.GetHlTypeRef(reader.ReadIndex()),
-                FIndex = reader.ReadUIndex(),
-            });
+            code.Natives.Add(
+                new HlNative(
+                    // In the hashlink source, these use hl_read_string instead, but
+                    // we don't make a distinction between strings and ustrings, so
+                    // this shouldn't be a concern for us.
+                    lib: code.GetUString(reader.ReadIndex()),
+                    name: code.GetUString(reader.ReadIndex()),
+                    t: code.GetHlTypeRef(reader.ReadIndex()),
+                    fIndex: reader.ReadUIndex()
+                )
+            );
         }
 
         code.Functions = new List<HlFunction>(functionCount);
@@ -169,7 +170,7 @@ public sealed class HlCode {
             if (!code.HasDebug)
                 continue;
 
-            func.Debug = reader.ReadDebugInfos(func.Opcodes!.Length);
+            func.Debug = reader.ReadDebugInfos(func.Opcodes.Length);
 
             if (code.Version < 3)
                 continue;
@@ -187,33 +188,17 @@ public sealed class HlCode {
 
         for (var i = 0; i < constantCount; i++) {
             HlConstant constant;
-            code.Constants.Add(constant = new HlConstant {
-                Global = reader.ReadUIndex(),
-                Fields = new int[reader.ReadUIndex()],
-            });
+            code.Constants.Add(
+                constant = new HlConstant(
+                    global: reader.ReadUIndex(),
+                    fields: new int[reader.ReadUIndex()]
+                )
+            );
 
             for (var j = 0; j < constant.Fields!.Length; j++)
                 constant.Fields![j] = reader.ReadUIndex();
         }
 
         return code;
-    }
-
-    private static List<string> ReadStrings(HlBinaryReader reader, int count, out List<int> lengths) {
-        var size = reader.ReadInt32();
-        var bytes = reader.ReadBytes(size).ToArray();
-        var strings = new List<string>(count);
-        lengths = new List<int>(count);
-
-        var offset = 0;
-
-        for (var i = 0; i < count; i++) {
-            var stringSize = reader.ReadUIndex();
-            strings.Add(Encoding.UTF8.GetString(bytes, offset, stringSize));
-            lengths.Add(stringSize);
-            offset += stringSize + 1;
-        }
-
-        return strings;
     }
 }
