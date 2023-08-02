@@ -19,12 +19,25 @@ public partial class HlCodeCompiler {
         var asmNameDef = new AssemblyNameDefinition(name, new Version(1, 0, 0, 0));
         var asmDef = AssemblyDefinition.CreateAssembly(asmNameDef, name, ModuleKind.Dll);
 
+        // Split into three steps.
+        //   Resolution:  Makes us aware of types, does the bare minimum for type
+        //                definition.
+        //   Definition:  Type definition past the bare minimum.
+        //   Compilation: Essentially makes things functional and adds
+        //                everything to the assembly.
+
+        // Resolution: Populates dictionaries with the bare minimum defined
+        // objects.
         foreach (var type in code.Types)
             ResolveType(type, asmDef);
 
+        // Definition: Populates defined objects with full type information
+        // (such as what type is inherited, etc.).
         foreach (var type in code.Types)
             DefineType(type, asmDef);
 
+        // Compilation: Adds defined objects to the assembly, further processing
+        // for things such as functions, etc.
         foreach (var type in code.Types)
             CompileType(type, asmDef);
 
