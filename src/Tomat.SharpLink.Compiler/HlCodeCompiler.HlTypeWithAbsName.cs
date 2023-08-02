@@ -1,15 +1,22 @@
-﻿using Mono.Cecil;
+﻿using System.Collections.Generic;
+using Mono.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private void ResolveHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) { }
+    private Dictionary<HlTypeWithAbsName, CustomAttribute> absNameDefs = new();
 
-    private void DefineHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) { }
+    private void ResolveHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
+        var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
+        absNameDefs.Add(type, attr);
+    }
+
+    private void DefineHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
+        var attr = absNameDefs[type];
+        attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, type.AbsName));
+    }
 
     private void CompileHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
-        var hashlinkAbstractAttribute = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
-        hashlinkAbstractAttribute.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, type.AbsName));
-        asmDef.CustomAttributes.Add(hashlinkAbstractAttribute);
+        asmDef.CustomAttributes.Add(absNameDefs[type]);
     }
 }
