@@ -1,0 +1,12 @@
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\bin\Debug\net7.0\Tomat.SharpLink.deps.json
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\bin\Debug\net7.0\Tomat.SharpLink.dll
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\bin\Debug\net7.0\Tomat.SharpLink.pdb
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.csproj.AssemblyReference.cache
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.AssemblyInfoInputs.cache
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.AssemblyInfo.cs
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.csproj.CoreCompileInputs.cache
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.dll
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\refint\Tomat.SharpLink.dll
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\Tomat.SharpLink.pdb
+C:\Users\xxlen\Documents\Repositories\sharplink\src\Tomat.SharpLink\obj\Debug\net7.0\ref\Tomat.SharpLink.dll

@@ -1,0 +1,126 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink.Compiler\\Tomat.SharpLink.Compiler.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink.Compiler\\Tomat.SharpLink.Compiler.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink.Compiler\\Tomat.SharpLink.Compiler.csproj",
+        "projectName": "Tomat.SharpLink.Compiler",
+        "projectPath": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink.Compiler\\Tomat.SharpLink.Compiler.csproj",
+        "packagesPath": "C:\\Users\\xxlen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink.Compiler\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\xxlen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Users\\xxlen\\Documents\\Repositories\\steviegt6\\ror2\\nuget\\": {},
+          "C:\\Users\\xxlen\\Documents\\nuget-local": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\Tomat.SharpLink.csproj": {
+                "projectPath": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\Tomat.SharpLink.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\Tomat.SharpLink.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\Tomat.SharpLink.csproj",
+        "projectName": "Tomat.SharpLink",
+        "projectPath": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\Tomat.SharpLink.csproj",
+        "packagesPath": "C:\\Users\\xxlen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\xxlen\\Documents\\Repositories\\sharplink\\src\\Tomat.SharpLink\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\xxlen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Users\\xxlen\\Documents\\Repositories\\steviegt6\\ror2\\nuget\\": {},
+          "C:\\Users\\xxlen\\Documents\\nuget-local": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
