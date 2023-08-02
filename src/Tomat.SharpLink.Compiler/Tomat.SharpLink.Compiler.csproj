@@ -7,11 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Tomat.SharpLink\Tomat.SharpLink.csproj"/>
+        <ProjectReference Include="..\Tomat.SharpLink\Tomat.SharpLink.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Mono.Cecil" Version="0.11.5"/>
+        <PackageReference Include="Mono.Cecil" Version="0.11.5" />
     </ItemGroup>
 
 </Project>
