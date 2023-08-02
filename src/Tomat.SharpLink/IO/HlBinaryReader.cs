@@ -130,8 +130,8 @@ public sealed class HlBinaryReader {
                     Arguments = new HlTypeRef[nArgs],
                 };
                 for (var i = 0; i < nArgs; i++)
-                    fun.Arguments[i] = code.GetHlTypeAsTypeRef(ReadIndex());
-                fun.ReturnType = code.GetHlTypeAsTypeRef(ReadIndex());
+                    fun.Arguments[i] = code.GetHlTypeRef(ReadIndex());
+                fun.ReturnType = code.GetHlTypeRef(ReadIndex());
 
                 return new HlTypeWithFun {
                     Kind = kind,
@@ -149,7 +149,7 @@ public sealed class HlBinaryReader {
                 var nBindings = ReadUIndex();
                 var obj = new HlTypeObj {
                     Name = name,
-                    Super = super < 0 ? null : code.GetHlTypeAsTypeRef(super),
+                    Super = super < 0 ? null : code.GetHlTypeRef(super),
                     GlobalValue = global,
                     Fields = new HlObjField[nFields],
                     Protos = new HlObjProto[nProtos],
@@ -162,7 +162,7 @@ public sealed class HlBinaryReader {
                     obj.Fields[i] = new HlObjField {
                         Name = fieldName,
                         HashedName = GenerateHash(fieldName, cache: true),
-                        Type = code.GetHlTypeAsTypeRef(ReadIndex()),
+                        Type = code.GetHlTypeRef(ReadIndex()),
                     };
                 }
 
@@ -189,7 +189,7 @@ public sealed class HlBinaryReader {
             case HlTypeKind.HREF: {
                 return new HlTypeWithType {
                     Kind = kind,
-                    Type = code.GetHlTypeAsTypeRef(ReadIndex()),
+                    Type = code.GetHlTypeRef(ReadIndex()),
                 };
             }
 
@@ -204,7 +204,7 @@ public sealed class HlBinaryReader {
                     virt.Fields[i] = new HlObjField {
                         Name = name,
                         HashedName = GenerateHash(name, cache: true),
-                        Type = code.GetHlTypeAsTypeRef(ReadIndex()),
+                        Type = code.GetHlTypeRef(ReadIndex()),
                     };
                 }
 
@@ -236,7 +236,7 @@ public sealed class HlBinaryReader {
                     };
 
                     for (var j = 0; j < nParams; j++)
-                        construct.Params[j] = code.GetHlTypeAsTypeRef(ReadIndex());
+                        construct.Params[j] = code.GetHlTypeRef(ReadIndex());
                 }
 
                 return new HlTypeWithEnum {
@@ -248,7 +248,7 @@ public sealed class HlBinaryReader {
             case HlTypeKind.HPACKED: {
                 return new HlTypeWithType {
                     Kind = kind,
-                    Type = code.GetHlTypeAsTypeRef(ReadIndex()),
+                    Type = code.GetHlTypeRef(ReadIndex()),
                 };
             }
 
@@ -264,13 +264,13 @@ public sealed class HlBinaryReader {
     }
 
     public HlFunction ReadHlFunction() {
-        var type = code.GetHlTypeAsTypeRef(ReadIndex());
+        var type = code.GetHlTypeRef(ReadIndex());
         var fIndex = ReadUIndex();
         var nRegs = ReadUIndex();
         var nOps = ReadUIndex();
         var regs = new HlTypeRef[nRegs];
         for (var i = 0; i < nRegs; i++)
-            regs[i] = code.GetHlTypeAsTypeRef(ReadIndex());
+            regs[i] = code.GetHlTypeRef(ReadIndex());
         var opcodes = new HlOpcode[nOps];
         for (var i = 0; i < nOps; i++)
             opcodes[i] = ReadHlOpcode();

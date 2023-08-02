@@ -43,6 +43,8 @@ public sealed class HlCode {
 
     public List<HlFunction> Functions { get; set; } = new();
 
+    public List<HlConstant> Constants { get; set; } = new();
+
     public string GetUString(int index) {
         if (index < 0 || index >= Strings.Count) {
             Console.WriteLine("Invalid string index.");
@@ -63,7 +65,7 @@ public sealed class HlCode {
         return Types[index];
     }
 
-    public HlTypeRef GetHlTypeAsTypeRef(int index) {
+    public HlTypeRef GetHlTypeRef(int index) {
         if (index < 0 || index >= Types.Count) {
             Console.WriteLine("Invalid type index.");
             index = 0;
@@ -90,99 +92,86 @@ public sealed class HlCode {
         if (reader.ReadByte() != hlb[0] || reader.ReadByte() != hlb[1] || reader.ReadByte() != hlb[2])
             throw new InvalidDataException("Not a valid HLB file");
 
-        var version = reader.ReadByte();
-        if (version is < min_version or > max_version)
-            throw new InvalidDataException($"Unsupported HLB version {version}");
+        code.Version = reader.ReadByte();
+        if (code.Version is < min_version or > max_version)
+            throw new InvalidDataException($"Unsupported HLB version {code.Version}");
 
         var flags = reader.ReadUIndex();
-        var nInts = reader.ReadUIndex();
-        var nFloats = reader.ReadUIndex();
-        var nStrings = reader.ReadUIndex();
-        var nBytes = version >= 5 ? reader.ReadUIndex() : 0;
-        var nTypes = reader.ReadUIndex();
-        var nGlobals = reader.ReadUIndex();
-        var nNatives = reader.ReadUIndex();
-        var nFunctions = reader.ReadUIndex();
-        var nConstants = reader.ReadUIndex();
-        var entrypoint = reader.ReadUIndex();
-        var hasDebug = (flags & 1) != 0;
+        var intCount = reader.ReadUIndex();
+        var floatCount = reader.ReadUIndex();
+        var stringCount = reader.ReadUIndex();
+        var byteCount = code.Version >= 5 ? reader.ReadUIndex() : 0;
+        var typeCount = reader.ReadUIndex();
+        var globalCount = reader.ReadUIndex();
+        var nativeCount = reader.ReadUIndex();
+        var functionCount = reader.ReadUIndex();
+        var constantCount = reader.ReadUIndex();
+        code.Entrypoint = reader.ReadUIndex();
+        code.HasDebug = (flags & 1) != 0;
 
-        code.Version = version;
-        code.Entrypoint = entrypoint;
-        code.HasDebug = hasDebug;
+        code.Ints = new List<int>(intCount);
+        for (var i = 0; i < intCount; i++)
+            code.Ints.Add(reader.ReadInt32());
 
-        var ints = new int[nInts];
-        for (var i = 0; i < nInts; i++)
-            ints[i] = reader.ReadInt32();
-        code.Ints = ints.ToList();
+        code.Floats = new List<double>(floatCount);
+        for (var i = 0; i < floatCount; i++)
+            code.Floats.Add(reader.ReadDouble());
 
-        var floats = new double[nFloats];
-        for (var i = 0; i < nFloats; i++)
-            floats[i] = reader.ReadDouble();
-        code.Floats = floats.ToList();
+        var strings = ReadStrings(reader, stringCount, out var stringLengths);
+        code.Strings = strings;
+        code.StringLengths = stringLengths;
 
-        var strings = ReadStrings(reader, nStrings, out var stringLengths);
-        code.Strings = strings.ToList();
-        code.StringLengths = stringLengths.ToList();
-
-        byte[] bytes;
-        int[] bytePositions;
-
-        if (version >= 5) {
+        if (code.Version >= 5) {
             var size = reader.ReadInt32();
-            bytes = reader.ReadBytes(size).ToArray();
-            bytePositions = new int[nBytes];
-            for (var i = 0; i < nBytes; i++)
-                bytePositions[i] = reader.ReadUIndex();
+            code.Bytes = reader.ReadBytes(size).ToArray().ToList();
+            code.BytePositions = new List<int>(byteCount);
+            for (var i = 0; i < byteCount; i++)
+                code.BytePositions.Add(reader.ReadInt32());
         }
         else {
-            bytes = Array.Empty<byte>();
-            bytePositions = Array.Empty<int>();
+            code.Bytes = new List<byte>();
+            code.BytePositions = new List<int>();
         }
 
-        code.Bytes = bytes.ToList();
-        code.BytePositions = bytePositions.ToList();
+        var debugFileCount = code.HasDebug ? reader.ReadUIndex() : 0;
+        var debugFiles = ReadStrings(reader, debugFileCount, out var debugFileLengths);
+        code.DebugFiles = debugFiles;
+        code.DebugFileLengths = debugFileLengths;
 
-        var nDebugFiles = hasDebug ? reader.ReadUIndex() : 0;
-        var debugFiles = ReadStrings(reader, nDebugFiles, out var debugFileLengths);
-        code.DebugFiles = debugFiles.ToList();
-        code.DebugFileLengths = debugFileLengths.ToList();
+        code.Types = new List<HlType>(typeCount);
+        for (var i = 0; i < typeCount; i++)
+            code.Types.Add(reader.ReadHlType());
 
-        code.Types = new List<HlType>(nTypes);
-        for (var i = 0; i < nTypes; i++)
-            code.Types[i] = reader.ReadHlType();
+        code.Globals = new List<HlTypeRef>(globalCount);
+        for (var i = 0; i < globalCount; i++)
+            code.Globals.Add(code.GetHlTypeRef(reader.ReadIndex()));
 
-        code.Globals = new List<HlTypeRef>(nGlobals);
-        for (var i = 0; i < nGlobals; i++)
-            code.Globals[i] = code.GetHlTypeAsTypeRef(reader.ReadIndex());
+        code.Natives = new List<HlNative>(nativeCount);
 
-        var natives = new HlNative[nNatives];
-
-        for (var i = 0; i < nNatives; i++) {
-            natives[i] = new HlNative {
+        for (var i = 0; i < nativeCount; i++) {
+            code.Natives.Add(new HlNative {
                 // In the hashlink source, these use hl_read_string instead, but
                 // we don't make a distinction between strings and ustrings, so
                 // this shouldn't be a concern for us.
                 Lib = code.GetUString(reader.ReadIndex()),
                 Name = code.GetUString(reader.ReadIndex()),
-                T = code.GetHlTypeAsTypeRef(reader.ReadIndex()),
+                T = code.GetHlTypeRef(reader.ReadIndex()),
                 FIndex = reader.ReadUIndex(),
-            };
+            });
         }
 
-        code.Natives = natives.ToList();
+        code.Functions = new List<HlFunction>(functionCount);
 
-        var functions = new HlFunction[nFunctions];
+        for (var i = 0; i < functionCount; i++) {
+            HlFunction func;
+            code.Functions.Add(func = reader.ReadHlFunction());
 
-        for (var i = 0; i < nFunctions; i++) {
-            functions[i] = reader.ReadHlFunction();
-
-            if (!hasDebug)
+            if (!code.HasDebug)
                 continue;
 
-            functions[i].Debug = reader.ReadDebugInfos(functions[i].Opcodes!.Length);
+            func.Debug = reader.ReadDebugInfos(func.Opcodes!.Length);
 
-            if (version < 3)
+            if (code.Version < 3)
                 continue;
 
             // Skip assigns.
@@ -194,35 +183,34 @@ public sealed class HlCode {
             }
         }
 
-        code.Functions = functions.ToList();
+        code.Constants = new List<HlConstant>(constantCount);
 
-        var constants = new HlConstant[nConstants];
-
-        for (var i = 0; i < nConstants; i++) {
-            constants[i] = new HlConstant {
+        for (var i = 0; i < constantCount; i++) {
+            HlConstant constant;
+            code.Constants.Add(constant = new HlConstant {
                 Global = reader.ReadUIndex(),
                 Fields = new int[reader.ReadUIndex()],
-            };
+            });
 
-            for (var j = 0; j < constants[i].Fields!.Length; j++)
-                constants[i].Fields![j] = reader.ReadUIndex();
+            for (var j = 0; j < constant.Fields!.Length; j++)
+                constant.Fields![j] = reader.ReadUIndex();
         }
 
         return code;
     }
 
-    private static string[] ReadStrings(HlBinaryReader reader, int count, out int[] lengths) {
+    private static List<string> ReadStrings(HlBinaryReader reader, int count, out List<int> lengths) {
         var size = reader.ReadInt32();
         var bytes = reader.ReadBytes(size).ToArray();
-        var strings = new string[count];
-        lengths = new int[count];
+        var strings = new List<string>(count);
+        lengths = new List<int>(count);
 
         var offset = 0;
 
         for (var i = 0; i < count; i++) {
             var stringSize = reader.ReadUIndex();
-            strings[i] = Encoding.UTF8.GetString(bytes, offset, stringSize);
-            lengths[i] = stringSize;
+            strings.Add(Encoding.UTF8.GetString(bytes, offset, stringSize));
+            lengths.Add(stringSize);
             offset += stringSize + 1;
         }
 
