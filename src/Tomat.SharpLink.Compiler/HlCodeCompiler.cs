@@ -1,10 +1,9 @@
 ﻿using System;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
-public class HlCodeCompiler {
+public partial class HlCodeCompiler {
     private readonly HlCode code;
 
     public HlCodeCompiler(HlCode code) {
@@ -37,103 +36,26 @@ public class HlCodeCompiler {
 
             case HlTypeKind.HBYTES:
             case HlTypeKind.HDYN:
+            case HlTypeKind.HTYPE:
+            case HlTypeKind.HARRAY:
                 // TODO: These are HL-only primitives, how will we handle them?
                 return;
         }
 
-        if (hlType is HlTypeWithAbsName absName) {
-            var hashlinkAbstractAttribute = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
-            hashlinkAbstractAttribute.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, @absName.AbsName));
-            asmDef.CustomAttributes.Add(hashlinkAbstractAttribute);
-        }
-        else if (hlType is HlTypeWithFun fun) {
-            // TODO
-        }
-        else if (hlType is HlTypeWithObj obj) {
-            // TODO
-        }
-        else if (hlType is HlTypeWithEnum @enum) {
-            ExtractNameAndNamespace(@enum.Enum.Name, out var enumNs, out var enumName);
-            var enumDef = new TypeDefinition(
-                enumNs ?? "",
-                enumName,
-                TypeAttributes.AnsiClass
-              | TypeAttributes.BeforeFieldInit
-              | TypeAttributes.Public
-              | TypeAttributes.Abstract,
-                asmDef.MainModule.TypeSystem.Object
-            );
-            asmDef.MainModule.Types.Add(enumDef);
-
-            var enumCtor = new MethodDefinition(
-                ".ctor",
-                MethodAttributes.Family
-              | MethodAttributes.HideBySig
-              | MethodAttributes.RTSpecialName
-              | MethodAttributes.SpecialName,
-                asmDef.MainModule.TypeSystem.Void
-            );
-            enumDef.Methods.Add(enumCtor);
-            var enumCtorIl = enumCtor.Body.GetILProcessor();
-            enumCtorIl.Emit(OpCodes.Ldarg_0);
-            enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(enumDef.BaseType)));
-            enumCtorIl.Emit(OpCodes.Ret);
-
-            foreach (var construct in @enum.Enum.Constructs) {
-                var nestedType = new TypeDefinition(
-                    enumNs ?? "",
-                    construct.Name,
-                    TypeAttributes.AnsiClass
-                  | TypeAttributes.BeforeFieldInit
-                  | TypeAttributes.NestedPublic,
-                    enumDef
-                );
-                // asmDef.MainModule.Types.Add(nestedType);
-                enumDef.NestedTypes.Add(nestedType);
-
-                var nestedCtor = new MethodDefinition(
-                    ".ctor",
-                    MethodAttributes.Public
-                  | MethodAttributes.HideBySig
-                  | MethodAttributes.RTSpecialName
-                  | MethodAttributes.SpecialName,
-                    asmDef.MainModule.TypeSystem.Void
-                );
-                nestedType.Methods.Add(nestedCtor);
-                var nestedCtorIl = nestedCtor.Body.GetILProcessor();
-                nestedCtorIl.Emit(OpCodes.Ldarg_0);
-                nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(nestedType.BaseType)));
-
-                var paramNumber = 0;
-
-                foreach (var param in construct.Params) {
-                    var name = "param" + paramNumber;
-                    var fieldDef = new FieldDefinition(
-                        name,
-                        FieldAttributes.Public,
-                        TypeReferenceFromHlTypeRef(param, asmDef)
-                    );
-                    nestedType.Fields.Add(fieldDef);
-
-                    var paramDef = new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType);
-                    nestedCtor.Parameters.Add(paramDef);
-
-                    nestedCtorIl.Emit(OpCodes.Ldarg_0);
-                    nestedCtorIl.Emit(OpCodes.Ldarg, paramDef);
-                    nestedCtorIl.Emit(OpCodes.Stfld, fieldDef);
-
-                    paramNumber++;
-                }
-
-                nestedCtorIl.Emit(OpCodes.Ret);
-            }
-        }
-        else if (hlType is HlTypeWithVirtual @virtual) {
-            // TODO
-        }
-        else if (hlType is HlTypeWithType type) {
-            // TODO
-        }
+        if (hlType is HlTypeWithAbsName absName)
+            CompileHlTypeWithAbsName(absName, asmDef);
+        else if (hlType is HlTypeWithFun fun)
+            CompileHlTypeWithFun(fun, asmDef);
+        else if (hlType is HlTypeWithObj obj)
+            CompileHlTypeWithObj(obj, asmDef);
+        else if (hlType is HlTypeWithEnum @enum)
+            CompileHlTypeWithEnum(@enum, asmDef);
+        else if (hlType is HlTypeWithVirtual @virtual)
+            CompileHlTypeWithVirtual(@virtual, asmDef);
+        else if (hlType is HlTypeWithType type)
+            CompileHlTypeWithType(type, asmDef);
+        else
+            throw new ArgumentOutOfRangeException(nameof(hlType), $"Unexpected HlType: '{hlType.GetType().FullName}'.");
     }
 
     private TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {

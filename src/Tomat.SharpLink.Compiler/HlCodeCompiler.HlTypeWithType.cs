@@ -1,3 +1,7 @@
-﻿namespace Tomat.SharpLink.Compiler;
+﻿using Mono.Cecil;
 
-partial class HlCodeCompiler { }
+namespace Tomat.SharpLink.Compiler;
+
+partial class HlCodeCompiler {
+    private void CompileHlTypeWithType(HlTypeWithType type, AssemblyDefinition asmDef) { }
+}
