@@ -22,8 +22,8 @@ public class HlCodeCompiler {
         return asmDef;
     }
 
-    private void CompileType(HlType type, AssemblyDefinition asmDef) {
-        switch (type.Kind) {
+    private void CompileType(HlType hlType, AssemblyDefinition asmDef) {
+        switch (hlType.Kind) {
             case HlTypeKind.HVOID:
             case HlTypeKind.HUI8:
             case HlTypeKind.HUI16:
@@ -41,12 +41,18 @@ public class HlCodeCompiler {
                 return;
         }
 
-        if (type is HlTypeWithAbsName @absName) {
+        if (hlType is HlTypeWithAbsName absName) {
             var hashlinkAbstractAttribute = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
             hashlinkAbstractAttribute.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, @absName.AbsName));
             asmDef.CustomAttributes.Add(hashlinkAbstractAttribute);
         }
-        else if (type is HlTypeWithEnum @enum) {
+        else if (hlType is HlTypeWithFun fun) {
+            // TODO
+        }
+        else if (hlType is HlTypeWithObj obj) {
+            // TODO
+        }
+        else if (hlType is HlTypeWithEnum @enum) {
             ExtractNameAndNamespace(@enum.Enum.Name, out var enumNs, out var enumName);
             var enumDef = new TypeDefinition(
                 enumNs ?? "",
@@ -121,6 +127,12 @@ public class HlCodeCompiler {
 
                 nestedCtorIl.Emit(OpCodes.Ret);
             }
+        }
+        else if (hlType is HlTypeWithVirtual @virtual) {
+            // TODO
+        }
+        else if (hlType is HlTypeWithType type) {
+            // TODO
         }
     }
 
