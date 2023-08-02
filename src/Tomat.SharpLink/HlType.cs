@@ -1,28 +1,9 @@
 ﻿namespace Tomat.SharpLink;
 
 public class HlTypeFun {
-    /*public struct HlTypeFunClosureType {
-        public HlTypeKind Kind { get; set; }
-
-        // TODO: whart
-        public nint P { get; set; }
-    }
-
-    public struct HlTypeFunClosure {
-        public HlTypeRef[]? Arguments { get; set; }
-
-        public HlTypeRef? ReturnType { get; set; }
-
-        public HlTypeRef? Parent { get; set; }
-    }*/
-
     public HlTypeRef[] Arguments { get; set; }
 
     public HlTypeRef ReturnType { get; set; }
-
-    /*public HlTypeFunClosureType? ClosureType { get; set; }
-
-    public HlTypeFunClosure Closure { get; set; }*/
 
     public HlTypeFun(HlTypeRef[] arguments, HlTypeRef returnType) {
         Arguments = arguments;
@@ -76,10 +57,6 @@ public class HlTypeObj {
         Bindings = bindings;
         GlobalValue = globalValue;
     }
-}
-
-public class HlModuleContext {
-    // TODO
 }
 
 public class HlEnumConstruct {

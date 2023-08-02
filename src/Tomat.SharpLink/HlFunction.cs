@@ -44,28 +44,10 @@ public class HlFunction {
 
     public int[]? Debug { get; set; }
 
-    public HlTypeObj? Obj { get; set; }
-
     public HlFunction(int fIndex, HlTypeRef type, HlTypeRef[] regs, HlOpcode[] opcodes) {
         FIndex = fIndex;
         Type = type;
         Regs = regs;
         Opcodes = opcodes;
-    }
-}
-
-public class HlFunctionWithName : HlFunction {
-    public string Name { get; set; }
-
-    public HlFunctionWithName(int fIndex, HlTypeRef type, HlTypeRef[] regs, HlOpcode[] opcodes, string name) : base(fIndex, type, regs, opcodes) {
-        Name = name;
-    }
-}
-
-public class HlFunctionWithRef : HlFunction {
-    public HlFunction RefFunction { get; set; }
-
-    public HlFunctionWithRef(int fIndex, HlTypeRef type, HlTypeRef[] regs, HlOpcode[] opcodes, HlFunction refFunction) : base(fIndex, type, regs, opcodes) {
-        RefFunction = refFunction;
     }
 }
