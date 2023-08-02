@@ -10,7 +10,6 @@ public sealed class HlBinaryReader {
     private int position;
     private readonly byte[] bytes;
     private readonly HlCode code;
-    private readonly Dictionary<string, int> hashCache = new();
 
     public HlBinaryReader(byte[] bytes, HlCode code) {
         this.bytes = bytes;
@@ -97,23 +96,6 @@ public sealed class HlBinaryReader {
         return strings;
     }
 
-    public int GenerateHash(string name, bool cache) {
-        var h = 0;
-        foreach (var c in name)
-            h = 233 * h + c;
-        h %= 0x1FFFFF7B;
-
-        if (!cache)
-            return h;
-
-        // Check for potential conflicts (haxe#5572).
-        /*if (hashCache.TryGetValue(name, out var cached)) {
-            // TODO: implement
-        }*/
-
-        return hashCache[name] = h;
-    }
-
     public string ReadUString() {
         var i = ReadIndex();
 
@@ -168,7 +150,6 @@ public sealed class HlBinaryReader {
                     var fieldName = ReadUString();
                     obj.Fields[i] = new HlObjField(
                         name: fieldName,
-                        hashedName: GenerateHash(fieldName, cache: true),
                         type: code.GetHlTypeRef(ReadIndex())
                     );
                 }
@@ -177,7 +158,6 @@ public sealed class HlBinaryReader {
                     var protoName = ReadUString();
                     obj.Protos[i] = new HlObjProto(
                         name: protoName,
-                        hashedName: GenerateHash(protoName, cache: true),
                         fIndex: ReadUIndex(),
                         pIndex: ReadIndex()
                     );
@@ -208,7 +188,6 @@ public sealed class HlBinaryReader {
                     var name = ReadUString();
                     virt.Fields[i] = new HlObjField(
                         name: name,
-                        hashedName: GenerateHash(name, cache: true),
                         type: code.GetHlTypeRef(ReadIndex())
                     );
                 }

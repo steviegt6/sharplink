@@ -35,12 +35,9 @@ public class HlObjField {
 
     public HlTypeRef Type { get; set; }
 
-    public int HashedName { get; set; }
-
-    public HlObjField(string name, HlTypeRef type, int hashedName) {
+    public HlObjField(string name, HlTypeRef type) {
         Name = name;
         Type = type;
-        HashedName = hashedName;
     }
 }
 
@@ -51,13 +48,10 @@ public class HlObjProto {
 
     public int PIndex { get; set; }
 
-    public int HashedName { get; set; }
-
-    public HlObjProto(string name, int fIndex, int pIndex, int hashedName) {
+    public HlObjProto(string name, int fIndex, int pIndex) {
         Name = name;
         FIndex = fIndex;
         PIndex = pIndex;
-        HashedName = hashedName;
     }
 }
 
