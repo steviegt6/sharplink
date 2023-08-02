@@ -208,7 +208,7 @@ public partial class HlCodeCompiler {
                 throw new NotImplementedException();
 
             case HlTypeKind.HOBJ:
-                throw new NotImplementedException();
+                return objDefs[(HlTypeWithObj)type];
 
             case HlTypeKind.HARRAY:
                 throw new NotImplementedException();
