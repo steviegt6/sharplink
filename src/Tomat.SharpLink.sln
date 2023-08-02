@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tomat.SharpLink.Cli", "Toma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tomat.SharpLink.Compiler", "Tomat.SharpLink.Compiler\Tomat.SharpLink.Compiler.csproj", "{4B1C52E0-798A-4F33-AF98-2D0B20237815}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tomat.SharpLink.CoreLib", "Tomat.SharpLink.CoreLib\Tomat.SharpLink.CoreLib.csproj", "{1B6034E7-1A22-4F24-B9B0-F0FF08135859}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{4B1C52E0-798A-4F33-AF98-2D0B20237815}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B1C52E0-798A-4F33-AF98-2D0B20237815}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B1C52E0-798A-4F33-AF98-2D0B20237815}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B6034E7-1A22-4F24-B9B0-F0FF08135859}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B6034E7-1A22-4F24-B9B0-F0FF08135859}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B6034E7-1A22-4F24-B9B0-F0FF08135859}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B6034E7-1A22-4F24-B9B0-F0FF08135859}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

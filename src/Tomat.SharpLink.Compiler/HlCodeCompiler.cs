@@ -41,7 +41,12 @@ public class HlCodeCompiler {
                 return;
         }
 
-        if (type is HlTypeWithEnum @enum) {
+        if (type is HlTypeWithAbsName @absName) {
+            var hashlinkAbstractAttribute = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
+            hashlinkAbstractAttribute.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, @absName.AbsName));
+            asmDef.CustomAttributes.Add(hashlinkAbstractAttribute);
+        }
+        else if (type is HlTypeWithEnum @enum) {
             ExtractNameAndNamespace(@enum.Enum.Name, out var enumNs, out var enumName);
             var enumDef = new TypeDefinition(
                 enumNs ?? "",
