@@ -4,6 +4,10 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
+    private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) { }
+
+    private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) { }
+
     private void CompileHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Enum.Name, out var enumNs, out var enumName);
         var enumDef = new TypeDefinition(

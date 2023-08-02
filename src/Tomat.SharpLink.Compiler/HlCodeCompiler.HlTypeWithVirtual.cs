@@ -3,6 +3,10 @@
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
+    private void ResolveHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) { }
+
+    private void DefineHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) { }
+
     private void CompileHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
         var virtType = CreateAnonymousType(
             "",

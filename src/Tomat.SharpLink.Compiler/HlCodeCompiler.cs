@@ -20,9 +20,89 @@ public partial class HlCodeCompiler {
         var asmDef = AssemblyDefinition.CreateAssembly(asmNameDef, name, ModuleKind.Dll);
 
         foreach (var type in code.Types)
+            ResolveType(type, asmDef);
+
+        foreach (var type in code.Types)
+            DefineType(type, asmDef);
+
+        foreach (var type in code.Types)
             CompileType(type, asmDef);
 
         return asmDef;
+    }
+
+    private void ResolveType(HlType hlType, AssemblyDefinition asmDef) {
+        switch (hlType.Kind) {
+            case HlTypeKind.HVOID:
+            case HlTypeKind.HUI8:
+            case HlTypeKind.HUI16:
+            case HlTypeKind.HI32:
+            case HlTypeKind.HI64:
+            case HlTypeKind.HF32:
+            case HlTypeKind.HF64:
+            case HlTypeKind.HBOOL:
+                // These are primitive types with .NET equivalents.
+                return;
+
+            case HlTypeKind.HBYTES:
+            case HlTypeKind.HDYN:
+            case HlTypeKind.HTYPE:
+            case HlTypeKind.HARRAY:
+                // TODO: These are HL-only primitives, how will we handle them?
+                return;
+        }
+
+        if (hlType is HlTypeWithAbsName absName)
+            ResolveHlTypeWithAbsName(absName, asmDef);
+        else if (hlType is HlTypeWithFun fun)
+            ResolveHlTypeWithFun(fun, asmDef);
+        else if (hlType is HlTypeWithObj obj)
+            ResolveHlTypeWithObj(obj, asmDef);
+        else if (hlType is HlTypeWithEnum @enum)
+            ResolveHlTypeWithEnum(@enum, asmDef);
+        else if (hlType is HlTypeWithVirtual @virtual)
+            ResolveHlTypeWithVirtual(@virtual, asmDef);
+        else if (hlType is HlTypeWithType type)
+            ResolveHlTypeWithType(type, asmDef);
+        else
+            throw new ArgumentOutOfRangeException(nameof(hlType), $"Unexpected HlType: '{hlType.GetType().FullName}'.");
+    }
+
+    private void DefineType(HlType hlType, AssemblyDefinition asmDef) {
+        switch (hlType.Kind) {
+            case HlTypeKind.HVOID:
+            case HlTypeKind.HUI8:
+            case HlTypeKind.HUI16:
+            case HlTypeKind.HI32:
+            case HlTypeKind.HI64:
+            case HlTypeKind.HF32:
+            case HlTypeKind.HF64:
+            case HlTypeKind.HBOOL:
+                // These are primitive types with .NET equivalents.
+                return;
+
+            case HlTypeKind.HBYTES:
+            case HlTypeKind.HDYN:
+            case HlTypeKind.HTYPE:
+            case HlTypeKind.HARRAY:
+                // TODO: These are HL-only primitives, how will we handle them?
+                return;
+        }
+
+        if (hlType is HlTypeWithAbsName absName)
+            DefineHlTypeWithAbsName(absName, asmDef);
+        else if (hlType is HlTypeWithFun fun)
+            DefineHlTypeWithFun(fun, asmDef);
+        else if (hlType is HlTypeWithObj obj)
+            DefineHlTypeWithObj(obj, asmDef);
+        else if (hlType is HlTypeWithEnum @enum)
+            DefineHlTypeWithEnum(@enum, asmDef);
+        else if (hlType is HlTypeWithVirtual @virtual)
+            DefineHlTypeWithVirtual(@virtual, asmDef);
+        else if (hlType is HlTypeWithType type)
+            DefineHlTypeWithType(type, asmDef);
+        else
+            throw new ArgumentOutOfRangeException(nameof(hlType), $"Unexpected HlType: '{hlType.GetType().FullName}'.");
     }
 
     private void CompileType(HlType hlType, AssemblyDefinition asmDef) {
