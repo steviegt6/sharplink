@@ -7,39 +7,7 @@ using Tomat.SharpLink.IO;
 
 namespace Tomat.SharpLink;
 
-public class HlCode {
-    /*private readonly struct HeaderInfo1 {
-        public readonly int Flags;
-        public readonly int NInts;
-        public readonly int NFloats;
-        public readonly int NStrings;
-
-        public HeaderInfo1(int flags, int nInts, int nFloats, int nStrings) {
-            Flags = flags;
-            NInts = nInts;
-            NFloats = nFloats;
-            NStrings = nStrings;
-        }
-    }
-
-    private readonly struct HeaderInfo2 {
-        public readonly int NTypes;
-        public readonly int NGlobals;
-        public readonly int NNatives;
-        public readonly int NFunctions;
-        public readonly int NConstants;
-        public readonly int Entrypoint;
-
-        public HeaderInfo2(int nTypes, int nGlobals, int nNatives, int nFunctions, int nConstants, int entrypoint) {
-            NTypes = nTypes;
-            NGlobals = nGlobals;
-            NNatives = nNatives;
-            NFunctions = nFunctions;
-            NConstants = nConstants;
-            Entrypoint = entrypoint;
-        }
-    }*/
-
+public sealed class HlCode {
     private const int min_version = 2;
     private const int max_version = 5;
 
@@ -49,35 +17,31 @@ public class HlCode {
 
     public bool HasDebug { get; set; }
 
-    public List<int> Ints { get; set; } = null!;
+    public List<int> Ints { get; set; } = new();
 
-    public List<double> Floats { get; set; } = null!;
+    public List<double> Floats { get; set; } = new();
 
-    public List<string> Strings { get; set; } = null!;
+    public List<string> Strings { get; set; } = new();
 
-    public List<int> StringLengths { get; set; } = null!;
+    public List<int> StringLengths { get; set; } = new();
 
-    public List<byte> Bytes { get; set; } = null!;
+    public List<byte> Bytes { get; set; } = new();
 
-    public List<int> BytePositions { get; set; } = null!;
+    public List<int> BytePositions { get; set; } = new();
 
-    public List<string> DebugFiles { get; set; } = null!;
+    public List<string> DebugFiles { get; set; } = new();
 
-    public List<int> DebugFileLengths { get; set; } = null!;
+    public List<int> DebugFileLengths { get; set; } = new();
 
     // UStrings would be here ig
 
-    /*public List<HlType> Types { get; set; } = null!;
+    public List<HlType> Types { get; set; } = new();
 
-    public List<HlType> Globals { get; set; } = null!;*/
+    public List<HlTypeRef> Globals { get; set; } = new();
 
-    public HlType[] Types { get; set; } = null!;
+    public List<HlNative> Natives { get; set; } = new();
 
-    public HlType[] Globals { get; set; } = null!;
-
-    public List<HlNative> Natives { get; set; } = null!;
-
-    public List<HlFunction> Functions { get; set; } = null!;
+    public List<HlFunction> Functions { get; set; } = new();
 
     public string GetUString(int index) {
         if (index < 0 || index >= Strings.Count) {
@@ -91,7 +55,7 @@ public class HlCode {
     }
 
     public HlType GetHlType(int index) {
-        if (index < 0 || index >= /*Types.Count*/ Types.Length) {
+        if (index < 0 || index >= Types.Count) {
             Console.WriteLine("Invalid type index.");
             index = 0;
         }
@@ -100,7 +64,7 @@ public class HlCode {
     }
 
     public HlTypeRef GetHlTypeAsTypeRef(int index) {
-        if (index < 0 || index >= /*Types.Count*/ Types.Length) {
+        if (index < 0 || index >= Types.Count) {
             Console.WriteLine("Invalid type index.");
             index = 0;
         }
@@ -123,29 +87,12 @@ public class HlCode {
         var reader = new HlBinaryReader(data, code);
 
         var hlb = "HLB"u8;
-        // if (reader.ReadBytes(3) != hlb)
-        //     throw new InvalidDataException("Not a valid HLB file");
         if (reader.ReadByte() != hlb[0] || reader.ReadByte() != hlb[1] || reader.ReadByte() != hlb[2])
             throw new InvalidDataException("Not a valid HLB file");
 
         var version = reader.ReadByte();
         if (version is < min_version or > max_version)
             throw new InvalidDataException($"Unsupported HLB version {version}");
-
-        /*var header1 = reader.Read<HeaderInfo1>();
-        var nBytes = version >= 5 ? reader.ReadInt32() : 0;
-        var header2 = reader.Read<HeaderInfo2>();
-        var hasDebug = header1.Flags & 1;
-
-        var ints = new int[header1.NInts];
-        for (var i = 0; i < header1.NInts; i++)
-            ints[i] = reader.ReadInt32();
-
-        var floats = new double[header1.NFloats];
-        for (var i = 0; i < header1.NFloats; i++)
-            floats[i] = reader.ReadDouble();
-
-        var strings = ReadStrings(reader, header1.NStrings, out var stringLengths);*/
 
         var flags = reader.ReadUIndex();
         var nInts = reader.ReadUIndex();
@@ -197,31 +144,13 @@ public class HlCode {
         code.DebugFiles = debugFiles.ToList();
         code.DebugFileLengths = debugFileLengths.ToList();
 
-        /*var types = new HlType[nTypes];
-        for (var i = 0; i < nTypes; i++)
-            types[i] = reader.ReadHlType();
-        code.Types = types.ToList();
-
-        var globals = new HlType[nGlobals];
-        for (var i = 0; i < nGlobals; i++)
-            globals[i] = code.GetHlType(reader.ReadIndex());
-        code.Globals = globals.ToList();*/
-
-        /*code.Types = new List<HlType>(nTypes);
-        for (var i = 0; i < nTypes; i++)
-            code.Types.Add(reader.ReadHlType());
-
-        code.Globals = new List<HlType>(nGlobals);
-        for (var i = 0; i < nGlobals; i++)
-            code.Globals.Add(code.GetHlType(reader.ReadUIndex()));*/
-
-        code.Types = new HlType[nTypes];
+        code.Types = new List<HlType>(nTypes);
         for (var i = 0; i < nTypes; i++)
             code.Types[i] = reader.ReadHlType();
 
-        code.Globals = new HlType[nGlobals];
+        code.Globals = new List<HlTypeRef>(nGlobals);
         for (var i = 0; i < nGlobals; i++)
-            code.Globals[i] = code.GetHlType(reader.ReadIndex());
+            code.Globals[i] = code.GetHlTypeAsTypeRef(reader.ReadIndex());
 
         var natives = new HlNative[nNatives];
 
@@ -244,18 +173,20 @@ public class HlCode {
         for (var i = 0; i < nFunctions; i++) {
             functions[i] = reader.ReadHlFunction();
 
-            if (hasDebug) {
-                functions[i].Debug = reader.ReadDebugInfos(functions[i].Opcodes!.Length);
+            if (!hasDebug)
+                continue;
 
-                if (version >= 3) {
-                    // Skip assigns.
-                    var nAssigns = reader.ReadUIndex();
+            functions[i].Debug = reader.ReadDebugInfos(functions[i].Opcodes!.Length);
 
-                    for (var j = 0; j < nAssigns; j++) {
-                        _ = reader.ReadUIndex();
-                        _ = reader.ReadUIndex();
-                    }
-                }
+            if (version < 3)
+                continue;
+
+            // Skip assigns.
+            var nAssigns = reader.ReadUIndex();
+
+            for (var j = 0; j < nAssigns; j++) {
+                _ = reader.ReadUIndex();
+                _ = reader.ReadUIndex();
             }
         }
 
