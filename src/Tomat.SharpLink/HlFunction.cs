@@ -1,35 +1,42 @@
-﻿namespace Tomat.SharpLink;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Tomat.SharpLink;
 
 public class HlOpcode {
     public HlOpcodeKind Kind { get; set; }
 
-    public int P1 { get; set; }
+    public int[] Parameters { get; set; }
 
-    public int P2 { get; set; }
-
-    public int P3 { get; set; }
-
-    public HlOpcode(HlOpcodeKind kind, int p1 = 0, int p2 = 0, int p3 = 0) {
+    public HlOpcode(HlOpcodeKind kind) {
         Kind = kind;
-        P1 = p1;
-        P2 = p2;
-        P3 = p3;
+        Parameters = Array.Empty<int>();
     }
-}
 
-public class HlOpcodeWithP4 : HlOpcode {
-    public int P4 { get; set; }
-
-    public HlOpcodeWithP4(HlOpcodeKind kind, int p1, int p2, int p3, int p4) : base(kind, p1, p2, p3) {
-        P4 = p4;
+    public HlOpcode(HlOpcodeKind kind, int p1) {
+        Kind = kind;
+        Parameters = new[] { p1 };
     }
-}
 
-public class HlOpcodeWithExtraParams : HlOpcode {
-    public int[] ExtraParams { get; set; }
+    public HlOpcode(HlOpcodeKind kind, int p1, int p2) {
+        Kind = kind;
+        Parameters = new[] { p1, p2 };
+    }
 
-    public HlOpcodeWithExtraParams(HlOpcodeKind kind, int p1, int p2, int p3, int[] extraParams) : base(kind, p1, p2, p3) {
-        ExtraParams = extraParams;
+    public HlOpcode(HlOpcodeKind kind, int p1, int p2, int p3) {
+        Kind = kind;
+        Parameters = new[] { p1, p2, p3 };
+    }
+
+    public HlOpcode(HlOpcodeKind kind, int p1, int p2, int p3, int p4) {
+        Kind = kind;
+        Parameters = new[] { p1, p2, p3, p4 };
+    }
+
+    public HlOpcode(HlOpcodeKind kind, int p1, int p2, int p3, IEnumerable<int> extraParams) {
+        Kind = kind;
+        Parameters = new[] { p1, p2, p3 }.Concat(extraParams).ToArray();
     }
 }
 

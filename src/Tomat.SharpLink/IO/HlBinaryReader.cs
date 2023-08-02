@@ -311,7 +311,7 @@ public sealed class HlBinaryReader {
             }
 
             case 4: {
-                return new HlOpcodeWithP4(
+                return new HlOpcode(
                     kind: kind,
                     p1: ReadIndex(),
                     p2: ReadIndex(),
@@ -333,7 +333,7 @@ public sealed class HlBinaryReader {
                         var extraParams = new int[p3];
                         for (var i = 0; i < p3; i++)
                             extraParams[i] = ReadIndex();
-                        return new HlOpcodeWithExtraParams(
+                        return new HlOpcode(
                             kind: kind,
                             p1: p1,
                             p2: p2,
@@ -349,7 +349,7 @@ public sealed class HlBinaryReader {
                         for (var i = 0; i < p2; i++)
                             extraParams[i] = ReadUIndex();
                         var p3 = ReadUIndex();
-                        return new HlOpcodeWithExtraParams(
+                        return new HlOpcode(
                             kind: kind,
                             p1: p1,
                             p2: p2,
@@ -371,7 +371,7 @@ public sealed class HlBinaryReader {
                 var extraParams = new int[size];
                 for (var i = 0; i < size; i++)
                     extraParams[i] = ReadIndex();
-                return new HlOpcodeWithExtraParams(
+                return new HlOpcode(
                     kind: kind,
                     p1: p1,
                     p2: p2,
