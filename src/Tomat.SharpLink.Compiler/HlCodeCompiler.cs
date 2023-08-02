@@ -62,11 +62,11 @@ public class HlCodeCompiler {
               | MethodAttributes.SpecialName,
                 asmDef.MainModule.TypeSystem.Void
             );
+            enumDef.Methods.Add(enumCtor);
             var enumCtorIl = enumCtor.Body.GetILProcessor();
             enumCtorIl.Emit(OpCodes.Ldarg_0);
             enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(enumDef.BaseType)));
             enumCtorIl.Emit(OpCodes.Ret);
-            enumDef.Methods.Add(enumCtor);
 
             foreach (var construct in @enum.Enum.Constructs) {
                 var nestedType = new TypeDefinition(
@@ -77,7 +77,8 @@ public class HlCodeCompiler {
                   | TypeAttributes.NestedPublic,
                     enumDef
                 );
-                asmDef.MainModule.Types.Add(nestedType);
+                // asmDef.MainModule.Types.Add(nestedType);
+                enumDef.NestedTypes.Add(nestedType);
 
                 var nestedCtor = new MethodDefinition(
                     ".ctor",
