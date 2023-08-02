@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Mono.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
 
 public partial class HlCodeCompiler {
     private readonly HlCode code;
+
+    private readonly Dictionary<string, int> anonymousTypeCounter = new();
 
     public HlCodeCompiler(HlCode code) {
         this.code = code;
@@ -58,7 +62,20 @@ public partial class HlCodeCompiler {
             throw new ArgumentOutOfRangeException(nameof(hlType), $"Unexpected HlType: '{hlType.GetType().FullName}'.");
     }
 
+#if DEBUG
     private TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
+        try {
+            return _TypeReferenceFromHlTypeRef(typeRef, asmDef);
+        }
+        catch {
+            return asmDef.MainModule.TypeSystem.Object;
+        }
+    }
+
+    private TypeReference _TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
+#else
+    private TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
+#endif
         if (typeRef.Value is not { } type)
             throw new ArgumentException("Type reference was null.", nameof(typeRef));
 
@@ -136,6 +153,16 @@ public partial class HlCodeCompiler {
             default:
                 throw new ArgumentOutOfRangeException(nameof(typeRef), "Type kind out range.");
         }
+    }
+
+    private TypeDefinition CreateAnonymousType(string @namespace, TypeAttributes attributes, TypeReference baseType, AssemblyDefinition asmDef) {
+        if (!anonymousTypeCounter.ContainsKey(@namespace))
+            anonymousTypeCounter.Add(@namespace, 0);
+
+        var name = $"<>f__AnonymousType{anonymousTypeCounter[@namespace]++}";
+        var typeDef = new TypeDefinition(@namespace, name, attributes, baseType);
+        typeDef.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
+        return typeDef;
     }
 
     private static void ExtractNameAndNamespace(string fullTypeName, out string? @namespace, out string name) {
