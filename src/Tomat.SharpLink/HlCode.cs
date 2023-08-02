@@ -107,6 +107,10 @@ public sealed class HlCode {
         var entrypoint = reader.ReadUIndex();
         var hasDebug = (flags & 1) != 0;
 
+        code.Version = version;
+        code.Entrypoint = entrypoint;
+        code.HasDebug = hasDebug;
+
         var ints = new int[nInts];
         for (var i = 0; i < nInts; i++)
             ints[i] = reader.ReadInt32();
