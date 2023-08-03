@@ -13,6 +13,10 @@ partial class HlCodeCompiler {
     private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.T.Value!).Fun;
         var method = CreateMethod(native, funType, asmDef);
+        var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkNativeImport).GetConstructor(new[] { typeof(string), typeof(string) })));
+        attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
+        attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Name));
+        method.CustomAttributes.Add(attr);
         nativeMethodDefs.Add(native, method);
     }
 
