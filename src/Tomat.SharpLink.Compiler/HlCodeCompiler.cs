@@ -254,7 +254,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeType));
 
             case HlTypeKind.HREF:
-                throw new NotImplementedException();
+                return asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
             case HlTypeKind.HVIRTUAL:
                 return virtDefs[(HlTypeWithVirtual)type];
