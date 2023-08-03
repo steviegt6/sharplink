@@ -24,6 +24,45 @@ partial class HlCodeCompiler {
         var funType = ((HlTypeWithFun)native.T.Value!).Fun;
         var method = nativeMethodDefs[native];
 
+        var body = method.Body = new MethodBody(method);
+        var il = body.GetILProcessor();
+
+        var callNativeMethod = asmDef.MainModule.ImportReference(typeof(SharpLinkNativeCallerHelper).GetMethod("CallNative"));
+        var callNativeMethodRef = asmDef.MainModule.ImportReference(typeof(SharpLinkNativeCallerHelper).GetMethod("CallNative", new[] { typeof(string), typeof(string), typeof(object[]) }));
+
+        // Make method invoke:
+        // Tomat.SharpLink.SharpLinkNativeCallerHelper.CallNative(lib, name, new object[] { arg0, arg1, ...});
+
+        il.Emit(OpCodes.Ldstr, native.Lib);
+        il.Emit(OpCodes.Ldstr, native.Name);
+        il.Emit(OpCodes.Ldc_I4, funType.Arguments.Length);
+        il.Emit(OpCodes.Newarr, asmDef.MainModule.TypeSystem.Object);
+
+        var argIndex = 0;
+
+        for (var i = method.Parameters.Count - 1; i >= 0; i--) {
+            il.Emit(OpCodes.Dup);
+            il.Emit(OpCodes.Ldc_I4, argIndex++);
+            il.Emit(OpCodes.Ldarg, i);
+
+            if (method.Parameters[i].ParameterType.IsValueType)
+                il.Emit(OpCodes.Box, method.Parameters[i].ParameterType);
+
+            il.Emit(OpCodes.Stelem_Ref);
+        }
+
+        il.Emit(OpCodes.Call, callNativeMethodRef);
+
+        // check if return is void
+        if (method.ReturnType.FullName == "System.Void")
+            il.Emit(OpCodes.Pop);
+        else if (method.ReturnType.IsValueType)
+            il.Emit(OpCodes.Unbox_Any, method.ReturnType);
+        else
+            il.Emit(OpCodes.Castclass, method.ReturnType);
+
+        il.Emit(OpCodes.Ret);
+
         asmDef.MainModule.GetType("<Module>").Methods.Add(method);
     }
 
