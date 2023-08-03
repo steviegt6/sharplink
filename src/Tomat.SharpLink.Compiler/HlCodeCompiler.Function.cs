@@ -7,11 +7,31 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private int methodCounter;
+    private Dictionary<HlFunction, MethodDefinition> funMethodDefs = new();
+    private Dictionary<HlNative, MethodDefinition> nativeMethodDefs = new();
+
+    private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
+        var funType = ((HlTypeWithFun)native.T.Value!).Fun;
+        var method = CreateMethod(native, funType, asmDef);
+        nativeMethodDefs.Add(native, method);
+    }
+
+    private void CompileNative(HlNative native, AssemblyDefinition asmDef) {
+        var funType = ((HlTypeWithFun)native.T.Value!).Fun;
+        var method = nativeMethodDefs[native];
+
+        asmDef.MainModule.GetType("<Module>").Methods.Add(method);
+    }
+
+    private void DefineFunction(HlFunction fun, AssemblyDefinition asmDef) {
+        var funType = ((HlTypeWithFun)fun.Type.Value!).Fun;
+        var method = CreateMethod(fun, funType, asmDef);
+        funMethodDefs.Add(fun, method);
+    }
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).Fun;
-        var method = CreateMethod(fun, funType, asmDef);
+        var method = funMethodDefs[fun];
         var locals = CreateMethodLocals(fun, funType, asmDef);
         GenerateMethodBody(method, locals, fun, asmDef);
 
@@ -21,7 +41,18 @@ partial class HlCodeCompiler {
     private MethodDefinition CreateMethod(HlFunction fun, HlTypeFun funType, AssemblyDefinition asmDef) {
         var retType = TypeReferenceFromHlTypeRef(funType.ReturnType, asmDef);
         var paramTypes = funType.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
-        var method = new MethodDefinition($"fun{methodCounter++}", MethodAttributes.Public | MethodAttributes.Static, retType);
+        var method = new MethodDefinition($"fun{fun.FIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
+
+        var argCounter = 0;
+        foreach (var paramType in paramTypes)
+            method.Parameters.Add(new ParameterDefinition($"arg{argCounter++}", ParameterAttributes.None, paramType));
+        return method;
+    }
+
+    private MethodDefinition CreateMethod(HlNative native, HlTypeFun funType, AssemblyDefinition asmDef) {
+        var retType = TypeReferenceFromHlTypeRef(funType.ReturnType, asmDef);
+        var paramTypes = funType.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
+        var method = new MethodDefinition($"fun{native.FIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
 
         var argCounter = 0;
         foreach (var paramType in paramTypes)
@@ -411,28 +442,99 @@ partial class HlCodeCompiler {
             }
 
             // *dst = (*a)()
-            case HlOpcodeKind.Call0:
+            case HlOpcodeKind.Call0: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // *dst = (*a)(*b)
-            case HlOpcodeKind.Call1:
+            case HlOpcodeKind.Call1: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var arg = instruction.Parameters[2];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                LoadLocal(il, locals, arg);
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // *dst = (*a)(*b, *c)
-            case HlOpcodeKind.Call2:
+            case HlOpcodeKind.Call2: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var arg1 = instruction.Parameters[2];
+                var arg2 = instruction.Parameters[3];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                LoadLocal(il, locals, arg1);
+                LoadLocal(il, locals, arg2);
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // *dst = (*a)(*b, *c, *d)
-            case HlOpcodeKind.Call3:
+            case HlOpcodeKind.Call3: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var arg1 = instruction.Parameters[2];
+                var arg2 = instruction.Parameters[3];
+                var arg3 = instruction.Parameters[4];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                LoadLocal(il, locals, arg1);
+                LoadLocal(il, locals, arg2);
+                LoadLocal(il, locals, arg3);
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // *dst = (*a)(*b, *c, *d, *e)
-            case HlOpcodeKind.Call4:
+            case HlOpcodeKind.Call4: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var arg1 = instruction.Parameters[2];
+                var arg2 = instruction.Parameters[3];
+                var arg3 = instruction.Parameters[4];
+                var arg4 = instruction.Parameters[5];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                LoadLocal(il, locals, arg1);
+                LoadLocal(il, locals, arg2);
+                LoadLocal(il, locals, arg3);
+                LoadLocal(il, locals, arg4);
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // *dst = (*a)(...)
-            case HlOpcodeKind.CallN:
+            case HlOpcodeKind.CallN: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var args = instruction.Parameters[2..];
+
+                var def = ResolveDefinitionFromFIndex(fun);
+
+                foreach (var arg in args)
+                    LoadLocal(il, locals, arg);
+                il.Emit(OpCodes.Call, def);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.CallMethod:
                 break;
@@ -824,5 +926,12 @@ partial class HlCodeCompiler {
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    private MethodDefinition ResolveDefinitionFromFIndex(int fIndex) {
+        var corrected = hash.FunctionIndexes[fIndex];
+        return corrected >= hash.Code.Functions.Count
+            ? nativeMethodDefs[hash.Code.Natives[corrected - hash.Code.Functions.Count]]
+            : funMethodDefs[hash.Code.Functions[corrected]];
     }
 }

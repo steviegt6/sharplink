@@ -82,7 +82,16 @@ public partial class HlCodeCompiler {
 
     private void CompileFunctions(AssemblyDefinition asmDef) {
         foreach (var func in hash.Code.Functions)
+            DefineFunction(func, asmDef);
+
+        foreach (var native in hash.Code.Natives)
+            DefineNative(native, asmDef);
+
+        foreach (var func in hash.Code.Functions)
             CompileFunction(func, asmDef);
+        
+        foreach (var native in hash.Code.Natives)
+            CompileNative(native, asmDef);
     }
 
     private void ResolveType(HlType hlType, AssemblyDefinition asmDef) {
