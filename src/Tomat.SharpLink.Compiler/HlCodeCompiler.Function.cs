@@ -65,8 +65,15 @@ partial class HlCodeCompiler {
             il.Emit(OpCodes.Stloc, locals[i]);
         }
 
-        foreach (var instr in fun.Opcodes)
-            GenerateInstruction(instr, locals, il, asmDef);
+        var markers = new Dictionary<int, Instruction>();
+        for (var i = 0; i < fun.Opcodes.Length; i++)
+            markers[i] = il.Create(OpCodes.Nop);
+
+        for (var i = 0; i < fun.Opcodes.Length; i++) {
+            var instr = fun.Opcodes[i];
+            il.Append(markers[i]);
+            GenerateInstruction(instr, locals, il, asmDef, i, markers);
+        }
     }
 
     private void PushCached<T>(ILProcessor il, int index) {
@@ -106,7 +113,12 @@ partial class HlCodeCompiler {
         il.Emit(OpCodes.Stsfld, field);
     }
 
-    private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef) {
+    private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef, int originalIndex, Dictionary<int, Instruction> markers) {
+        var originalIndexForJump = originalIndex + 1;
+
+        if (markers.TryGetValue(originalIndex, out var marker))
+            il.Append(marker);
+
         switch (instruction.Kind) {
             // *dst = *src
             case HlOpcodeKind.Mov: {
@@ -478,62 +490,217 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.DynSet:
                 break;
 
-            case HlOpcodeKind.JTrue:
-                break;
+            // Jump to offset if true.
+            case HlOpcodeKind.JTrue: {
+                var a = instruction.Parameters[0];
+                var offset = instruction.Parameters[1];
 
-            case HlOpcodeKind.JFalse:
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JNull:
-                break;
+            // Jump to offset if false.
+            case HlOpcodeKind.JFalse: {
+                var a = instruction.Parameters[0];
+                var offset = instruction.Parameters[1];
 
-            case HlOpcodeKind.JNotNull:
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JSLt:
-                break;
+            // Jump to offset if null.
+            case HlOpcodeKind.JNull: {
+                var a = instruction.Parameters[0];
+                var offset = instruction.Parameters[1];
 
-            case HlOpcodeKind.JSGte:
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JSGt:
-                break;
+            // Jump to offset if not null.
+            case HlOpcodeKind.JNotNull: {
+                var a = instruction.Parameters[0];
+                var offset = instruction.Parameters[1];
 
-            case HlOpcodeKind.JSLte:
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JULt:
-                break;
+            // Jump to offset if *a < *b.
+            case HlOpcodeKind.JSLt: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
 
-            case HlOpcodeKind.JUGte:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JNotLt:
-                break;
+            // Jump to offset if *a >= *b.
+            case HlOpcodeKind.JSGte: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
 
-            case HlOpcodeKind.JNotGte:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JEq:
-                break;
+            // Jump to offset if *a > *b.
+            case HlOpcodeKind.JSGt: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
 
-            case HlOpcodeKind.JNotEq:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Cgt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
+            }
 
-            case HlOpcodeKind.JAlways:
+            // Jump to offset if *a <= *b.
+            case HlOpcodeKind.JSLte: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Cgt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
+            }
+
+            // Jump to offset if *a < *b.
+            case HlOpcodeKind.JULt: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt_Un); // TODO: use a real method later...
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset if *a >= *b.
+            case HlOpcodeKind.JUGte: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt_Un); // TODO: use a real method later...
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset if !(*a < *b).
+            case HlOpcodeKind.JNotLt: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset if !(*a >= *b).
+            case HlOpcodeKind.JNotGte: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset if *a == *b.
+            case HlOpcodeKind.JEq: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Ceq); // TODO: use a real method later...
+                il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset if *a != *b.
+            case HlOpcodeKind.JNotEq: {
+                var a = instruction.Parameters[0];
+                var b = instruction.Parameters[1];
+                var offset = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Ceq); // TODO: use a real method later...
+                il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
+                break;
+            }
+
+            // Jump to offset always.
+            case HlOpcodeKind.JAlways: {
+                var offset = instruction.Parameters[0];
+
+                il.Emit(OpCodes.Br, markers[originalIndexForJump + offset]);
+                break;
+            }
 
             case HlOpcodeKind.ToDyn:
                 break;
 
-            case HlOpcodeKind.ToSFloat:
-                break;
+            case HlOpcodeKind.ToSFloat: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
 
-            case HlOpcodeKind.ToUFloat:
+                LoadLocal(il, locals, src);
+                // il.Emit(OpCodes.Conv_R4);
+                il.Emit(OpCodes.Conv_R8);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.ToInt:
+            case HlOpcodeKind.ToUFloat: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Conv_R_Un);
+                SetLocal(il, locals, dst);
                 break;
+            }
+
+            case HlOpcodeKind.ToInt: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Conv_I4);
+                SetLocal(il, locals, dst);
+                break;
+            }
 
             case HlOpcodeKind.SafeCast:
                 break;
