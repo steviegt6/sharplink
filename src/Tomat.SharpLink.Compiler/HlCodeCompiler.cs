@@ -43,6 +43,24 @@ public partial class HlCodeCompiler {
         foreach (var type in hash.Code.Types)
             CompileType(type, asmDef);
 
+        foreach (var global in hash.Code.Globals) {
+            if (global.Value is not { } value)
+                throw new InvalidOperationException($"Encountered global with missing value.");
+
+            // Handled in HlCodeCompiler.HlTypeWithAbsName.cs
+            if (value is HlTypeWithAbsName absName)
+                continue;
+
+            var type = value switch {
+                HlTypeWithObj obj => objDefs[obj],
+                HlTypeWithEnum @enum => enumDefs[@enum],
+                _ => throw new InvalidOperationException($"Encountered global with unknown type {value.GetType().Name}.")
+            };
+
+            var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkGlobalAttribute).GetConstructor(Type.EmptyTypes)));
+            type.CustomAttributes.Add(attr);
+        }
+
         return asmDef;
     }
 
