@@ -40,11 +40,11 @@ public static class CecilUtils {
         return reference;
     }
 
-    public static FieldReference MakeHostInstanceGeneric(this FieldReference field, TypeReference arg) {
+    public static FieldReference MakeHostInstanceGeneric(this FieldReference field, params TypeReference[] args) {
         var reference = new FieldReference(
             field.Name,
-            arg,
-            field.DeclaringType.MakeGenericInstanceType(arg)
+            field.FieldType,
+            field.DeclaringType.MakeGenericInstanceType(args)
         );
 
         return reference;

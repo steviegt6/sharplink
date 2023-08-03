@@ -969,9 +969,6 @@ partial class HlCodeCompiler {
                 var genericArgument = GetTypeForLocal(locals, dst);
                 var haxeRefType = asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(genericArgument);
                 var haxeRefValueField = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Fields.First(x => x.Name == "Value")).MakeHostInstanceGeneric(genericArgument);
-                // var haxeRefValueField = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Fields.First(x => x.Name == "Value"));
-                // haxeRefValueField.DeclaringType = haxeRefType;
-                // haxeRefValueField.FieldType = genericArgument;
 
                 LoadLocal(il, locals, src);
                 il.Emit(OpCodes.Ldfld, haxeRefValueField);
