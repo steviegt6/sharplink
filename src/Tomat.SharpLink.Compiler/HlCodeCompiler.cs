@@ -21,6 +21,8 @@ public partial class HlCodeCompiler {
         var asmNameDef = new AssemblyNameDefinition(name, new Version(1, 0, 0, 0));
         var asmDef = AssemblyDefinition.CreateAssembly(asmNameDef, name, ModuleKind.Dll);
 
+        InitializeAbsNameGlobals();
+
         // Split into three steps.
         //   Resolution:  Makes us aware of types, does the bare minimum for type
         //                definition.

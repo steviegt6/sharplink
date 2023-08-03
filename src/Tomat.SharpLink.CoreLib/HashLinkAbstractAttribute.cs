@@ -4,10 +4,10 @@
 public sealed class HashLinkAbstractAttribute : Attribute {
     public string AbstractName { get; }
 
-    public bool IsGlobal { get; }
+    public int[] Globals { get; }
 
-    public HashLinkAbstractAttribute(string abstractName, bool isGlobal) {
+    public HashLinkAbstractAttribute(string abstractName, params int[] globals) {
         AbstractName = abstractName;
-        IsGlobal = isGlobal;
+        Globals = globals;
     }
 }
