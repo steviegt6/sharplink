@@ -979,8 +979,9 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.Setref:
-                break;
+                throw new NotImplementedException();
 
             case HlOpcodeKind.MakeEnum:
                 break;
