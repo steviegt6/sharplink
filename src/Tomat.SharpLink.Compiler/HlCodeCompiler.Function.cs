@@ -877,8 +877,11 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.ToVirtual:
                 break;
 
-            case HlOpcodeKind.Label:
+            case HlOpcodeKind.Label: {
+                // no-op
+                il.Emit(OpCodes.Nop);
                 break;
+            }
 
             case HlOpcodeKind.Ret: {
                 var localIndex = instruction.Parameters[0];
@@ -949,13 +952,6 @@ partial class HlCodeCompiler {
                 var dst = instruction.Parameters[0];
                 var src = instruction.Parameters[1];
 
-                // Call HaxeRef.MakeRef<T>(src);
-                /*var srcType = GetTypeForLocal(locals, src);
-                var haxeRef = asmDef.MainModule.ImportReference(typeof(HaxeRef)).Resolve();
-                var haxeRefMakeRef = haxeRef.Methods.First(m => m.Name == "MakeRef" && m.Parameters.Count == 1);
-                var haxeRefMakeRefGeneric = new GenericInstanceMethod(haxeRefMakeRef);
-                haxeRefMakeRefGeneric.GenericArguments.Add(asmDef.MainModule.ImportReference(srcType));*/
-
                 var genericArgument = GetTypeForLocal(locals, src);
                 var haxeRefType = asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(genericArgument);
                 var haxeRefCtor = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Methods.First(x => x.IsConstructor && x.Parameters.Count == 1)).MakeHostInstanceGeneric(genericArgument);
@@ -966,8 +962,22 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            case HlOpcodeKind.Unref:
+            case HlOpcodeKind.Unref: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                var genericArgument = GetTypeForLocal(locals, dst);
+                var haxeRefType = asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(genericArgument);
+                var haxeRefValueField = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Fields.First(x => x.Name == "Value")).MakeHostInstanceGeneric(genericArgument);
+                // var haxeRefValueField = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Fields.First(x => x.Name == "Value"));
+                // haxeRefValueField.DeclaringType = haxeRefType;
+                // haxeRefValueField.FieldType = genericArgument;
+
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Ldfld, haxeRefValueField);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.Setref:
                 break;

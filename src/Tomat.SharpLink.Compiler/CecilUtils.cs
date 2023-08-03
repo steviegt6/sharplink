@@ -30,13 +30,23 @@ public static class CecilUtils {
             ExplicitThis = method.ExplicitThis,
             CallingConvention = method.CallingConvention,
         };
-        
+
         foreach (var param in method.Parameters)
             reference.Parameters.Add(new ParameterDefinition(param.ParameterType));
-        
+
         foreach (var genericParam in method.GenericParameters)
             reference.GenericParameters.Add(new GenericParameter(genericParam.Name, reference));
-        
+
+        return reference;
+    }
+
+    public static FieldReference MakeHostInstanceGeneric(this FieldReference field, TypeReference arg) {
+        var reference = new FieldReference(
+            field.Name,
+            arg,
+            field.DeclaringType.MakeGenericInstanceType(arg)
+        );
+
         return reference;
     }
 }
