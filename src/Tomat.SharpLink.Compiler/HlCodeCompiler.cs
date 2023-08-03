@@ -257,7 +257,7 @@ public partial class HlCodeCompiler {
                 throw new NotImplementedException();
 
             case HlTypeKind.HVIRTUAL:
-                throw new NotImplementedException();
+                return virtDefs[(HlTypeWithVirtual)type];
 
             case HlTypeKind.HDYNOBJ:
                 throw new NotImplementedException();
