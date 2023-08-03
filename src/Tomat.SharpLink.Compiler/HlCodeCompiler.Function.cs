@@ -22,8 +22,9 @@ partial class HlCodeCompiler {
         var paramTypes = funType.Fun.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
         var method = new MethodDefinition($"fun{methodCounter++}", MethodAttributes.Public | MethodAttributes.Static, retType);
 
+        var argCounter = 0;
         foreach (var paramType in paramTypes)
-            method.Parameters.Add(new ParameterDefinition(paramType));
+            method.Parameters.Add(new ParameterDefinition($"arg{argCounter++}", ParameterAttributes.None, paramType));
 
         return method;
     }
