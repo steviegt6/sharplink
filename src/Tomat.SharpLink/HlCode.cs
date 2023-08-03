@@ -73,6 +73,10 @@ public sealed class HlCode {
         return new HlTypeRef(index, this);
     }
 
+    public HlCodeHash CreateCodeHash() {
+        return new HlCodeHash(this);
+    }
+
     // TODO: Seek to beginning?
     public static HlCode FromStream(Stream stream) {
         var bytes = new byte[stream.Length];
@@ -200,5 +204,29 @@ public sealed class HlCode {
         }
 
         return code;
+    }
+}
+
+public class HlCodeHash {
+    public HlCode Code { get; }
+
+    public int[] FunctionIndexes { get; }
+
+    public HlCodeHash(HlCode code) {
+        Code = code;
+
+        FunctionIndexes = new int[Code.Functions.Count + Code.Natives.Count];
+
+        for (var i = 0; i < Code.Functions.Count; i++) {
+            var func = Code.Functions[i];
+            FunctionIndexes[func.FIndex] = i;
+        }
+
+        for (var i = 0; i < Code.Natives.Count; i++) {
+            var native = Code.Natives[i];
+            FunctionIndexes[native.FIndex] = i + Code.Functions.Count;
+        }
+
+        // TODO: type hashes, global signs, etc.? idk if we need them
     }
 }

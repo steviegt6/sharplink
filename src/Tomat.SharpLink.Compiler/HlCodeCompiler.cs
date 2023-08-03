@@ -7,13 +7,13 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 public partial class HlCodeCompiler {
-    private readonly HlCode code;
+    private readonly HlCodeHash hash;
 
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
     // private int anonymousDelegateCounter = 0;
 
-    public HlCodeCompiler(HlCode code) {
-        this.code = code;
+    public HlCodeCompiler(HlCodeHash hash) {
+        this.hash = hash;
     }
 
     public AssemblyDefinition Compile(string name) {
@@ -30,17 +30,17 @@ public partial class HlCodeCompiler {
 
         // Resolution: Populates dictionaries with the bare minimum defined
         // objects.
-        foreach (var type in code.Types)
+        foreach (var type in hash.Code.Types)
             ResolveType(type, asmDef);
 
         // Definition: Populates defined objects with full type information
         // (such as what type is inherited, etc.).
-        foreach (var type in code.Types)
+        foreach (var type in hash.Code.Types)
             DefineType(type, asmDef);
 
         // Compilation: Adds defined objects to the assembly, further processing
         // for things such as functions, etc.
-        foreach (var type in code.Types)
+        foreach (var type in hash.Code.Types)
             CompileType(type, asmDef);
 
         return asmDef;

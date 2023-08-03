@@ -55,7 +55,7 @@ partial class HlCodeCompiler {
 
         foreach (var proto in type.Obj.Protos) {
             var protoDef = objProtoDefs[type][proto];
-            protoDef.FieldType = funDefs[(HlTypeWithFun)code.Functions[proto.FIndex].Type.Value!];
+            protoDef.FieldType = funDefs[(HlTypeWithFun)hash.Code.Functions[hash.FunctionIndexes[proto.FIndex]].Type.Value!];
         }
     }
 
@@ -66,5 +66,9 @@ partial class HlCodeCompiler {
         var fieldDefs = objFieldDefs[type];
         foreach (var fieldDef in fieldDefs.Values)
             objDef.Fields.Add(fieldDef);
+
+        var protoDefs = objProtoDefs[type];
+        foreach (var protoDef in protoDefs.Values)
+            objDef.Fields.Add(protoDef);
     }
 }

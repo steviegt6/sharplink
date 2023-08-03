@@ -15,8 +15,8 @@ internal static class Program {
         
         }*/
 
-        var code = HlCode.FromStream(File.OpenRead(args[0]));
-        var compiler = new HlCodeCompiler(code);
+        var hash = HlCode.FromStream(File.OpenRead(args[0])).CreateCodeHash();
+        var compiler = new HlCodeCompiler(hash);
         var assembly = compiler.Compile(Path.GetFileNameWithoutExtension(args[0]));
 
         // debug: write to disk
