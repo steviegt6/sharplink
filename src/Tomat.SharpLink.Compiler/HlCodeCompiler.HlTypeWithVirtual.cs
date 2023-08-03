@@ -1,14 +1,17 @@
-﻿using Mono.Cecil;
+﻿using System.Collections.Generic;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private void ResolveHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) { }
+    private Dictionary<HlTypeWithVirtual, TypeDefinition> virtDefs = new();
+    private Dictionary<HlTypeWithVirtual, MethodDefinition> virtCtorDefs = new();
+    private Dictionary<HlTypeWithVirtual, List<FieldDefinition>> virtFieldDefs = new();
+    private Dictionary<HlTypeWithVirtual, List<ParameterDefinition>> virtParamDefs = new();
 
-    private void DefineHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) { }
-
-    private void CompileHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
-        var virtType = CreateAnonymousType(
+    private void ResolveHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
+        var virtDef = CreateAnonymousType(
             "",
             TypeAttributes.Class
           | TypeAttributes.NotPublic
@@ -19,13 +22,61 @@ partial class HlCodeCompiler {
             asmDef.MainModule.TypeSystem.Object,
             asmDef
         );
-        asmDef.MainModule.Types.Add(virtType);
+        virtDefs.Add(type, virtDef);
+
+        var ctorDef = new MethodDefinition(
+            ".ctor",
+            MethodAttributes.Public
+          | MethodAttributes.HideBySig
+          | MethodAttributes.SpecialName
+          | MethodAttributes.RTSpecialName,
+            asmDef.MainModule.TypeSystem.Void
+        );
+        virtCtorDefs.Add(type, ctorDef);
+
+        virtFieldDefs.Add(type, new List<FieldDefinition>());
+        virtParamDefs.Add(type, new List<ParameterDefinition>());
+    }
+
+    private void DefineHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
+        var virtFields = virtFieldDefs[type];
+        var virtParams = virtParamDefs[type];
 
         foreach (var field in type.Virtual.Fields) {
             var fieldType = TypeReferenceFromHlTypeRef(field.Type, asmDef);
             var name = field.Name;
             var fieldDef = new FieldDefinition(name, FieldAttributes.Public, fieldType);
-            virtType.Fields.Add(fieldDef);
+            virtFields.Add(fieldDef);
+
+            var paramDef = new ParameterDefinition(name, ParameterAttributes.None, fieldType);
+            virtParams.Add(paramDef);
         }
+    }
+
+    private void CompileHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
+        var virtDef = virtDefs[type];
+        asmDef.MainModule.Types.Add(virtDef);
+
+        var ctorDef = virtCtorDefs[type];
+        virtDef.Methods.Add(ctorDef);
+
+        var ctorDefIl = ctorDef.Body.GetILProcessor();
+
+        var virtFields = virtFieldDefs[type];
+        var virtParams = virtParamDefs[type];
+
+        for (var i = 0; i < type.Virtual.Fields.Length; i++) {
+            var fieldDef = virtFields[i];
+            virtDef.Fields.Add(fieldDef);
+
+            var paramDef = virtParams[i];
+            ctorDef.Parameters.Add(paramDef);
+
+            ctorDefIl.Emit(OpCodes.Ldarg_0);
+            ctorDefIl.Emit(OpCodes.Ldarg, paramDef);
+            ctorDefIl.Emit(OpCodes.Stfld, fieldDef);
+        }
+
+        ctorDefIl.Emit(OpCodes.Ret);
     }
 }
