@@ -11,9 +11,3 @@ public class HaxeRef<T> {
         Value = value;
     }
 }
-
-public static class HaxeRef {
-    public static HaxeRef<T> MakeRef<T>(T value) {
-        return new HaxeRef<T>(value);
-    }
-}
