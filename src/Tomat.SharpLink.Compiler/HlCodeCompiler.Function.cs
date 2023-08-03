@@ -69,79 +69,318 @@ partial class HlCodeCompiler {
             GenerateInstruction(instr, locals, il, asmDef);
     }
 
+    private void PushCached<T>(ILProcessor il, int index) {
+        if (typeof(T) == typeof(int) || typeof(T) == typeof(byte) || typeof(T) == typeof(ushort))
+            il.Emit(OpCodes.Ldc_I4, hash.Code.Ints[index]);
+        else if (typeof(T) == typeof(long))
+            il.Emit(OpCodes.Ldc_I8, hash.Code.Ints[index]);
+        else if (typeof(T) == typeof(float))
+            il.Emit(OpCodes.Ldc_R4, (float)hash.Code.Floats[index]);
+        else if (typeof(T) == typeof(double))
+            il.Emit(OpCodes.Ldc_R8, hash.Code.Floats[index]);
+        else if (typeof(T) == typeof(string))
+            il.Emit(OpCodes.Ldstr, hash.Code.Strings[index]);
+    }
+
+    private void PushConverter<TSys, THaxe>(ILProcessor il, AssemblyDefinition asmDef) {
+        il.Emit(OpCodes.Newobj, asmDef.MainModule.ImportReference(typeof(THaxe).GetConstructor(new[] { typeof(TSys) })));
+    }
+
+    private void LoadLocal(ILProcessor il, List<VariableDefinition> locals, int index) {
+        il.Emit(OpCodes.Ldloc, locals[index]);
+    }
+
+    private void SetLocal(ILProcessor il, List<VariableDefinition> locals, int index) {
+        il.Emit(OpCodes.Stloc, locals[index]);
+    }
+
     private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef) {
         switch (instruction.Kind) {
-            case HlOpcodeKind.Mov:
-                break;
+            // *dst = *src
+            case HlOpcodeKind.Mov: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
 
-            case HlOpcodeKind.Int:
+                LoadLocal(il, locals, src);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.Float:
+            // *dst = ints[key]
+            case HlOpcodeKind.Int: {
+                var dst = instruction.Parameters[0];
+                var key = instruction.Parameters[1];
+
+                PushCached<int>(il, key);
+                // PushConverter<int, HaxeI32>(il, asmDef);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.Bool:
+            // *dst = floats[key]
+            case HlOpcodeKind.Float: {
+                var destIndex = instruction.Parameters[0];
+                var floatKey = instruction.Parameters[1];
+
+                PushCached<double>(il, floatKey);
+                // PushConverter<double, HaxeF64>(il, asmDef);
+                SetLocal(il, locals, destIndex);
                 break;
+            }
 
+            // *dst = *value != 0
+            case HlOpcodeKind.Bool: {
+                var destIndex = instruction.Parameters[0];
+                var value = instruction.Parameters[1];
+
+                il.Emit(OpCodes.Ldc_I4, value);
+                // PushConverter<int, HaxeBool>(il, asmDef);
+                SetLocal(il, locals, destIndex);
+                break;
+            }
+
+            // TODO
             case HlOpcodeKind.Bytes:
-                break;
+                // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.
+                throw new NotImplementedException();
 
-            case HlOpcodeKind.String:
-                break;
+            // TODO: Seems like sometimes the destination can be HaxeBytes, so
+            // we may want to implement a check and handle conversion.
+            //   haxeBytes = (HaxeBytes)(object)"Main";
+            //   ldstr "Date"
+            //   stloc 3 ([3] class [Tomat.SharpLink.CoreLib]Tomat.SharpLink.HaxeBytes)
+            // *dst = strings[key]
+            case HlOpcodeKind.String: {
+                var destIndex = instruction.Parameters[0];
+                var stringKey = instruction.Parameters[1];
 
-            case HlOpcodeKind.Null:
+                PushCached<string>(il, stringKey);
+                // PushConverter<string, HaxeString>(il, asmDef);
+                SetLocal(il, locals, destIndex);
                 break;
+            }
 
-            case HlOpcodeKind.Add:
-                break;
+            // *dst = null
+            case HlOpcodeKind.Null: {
+                var destIndex = instruction.Parameters[0];
 
-            case HlOpcodeKind.Sub:
+                il.Emit(OpCodes.Ldnull);
+                SetLocal(il, locals, destIndex);
                 break;
+            }
 
-            case HlOpcodeKind.Mul:
-                break;
+            // *dst = *a + *b
+            case HlOpcodeKind.Add: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.SDiv:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Add); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.UDiv:
-                break;
+            // *dst = *a - *b
+            case HlOpcodeKind.Sub: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.SMod:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Sub); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.UMod:
-                break;
+            // *dst = *a * *b
+            case HlOpcodeKind.Mul: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.Shl:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Mul); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.SShr:
-                break;
+            // *dst = *a / *b
+            case HlOpcodeKind.SDiv: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.UShr:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Div); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.And:
-                break;
+            // *dst = *a / *b
+            case HlOpcodeKind.UDiv: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.Or:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Div); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.Xor:
-                break;
+            // *dst = *a % *b
+            case HlOpcodeKind.SMod: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.Neg:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Rem); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.Not:
-                break;
+            // *dst = *a % *b
+            case HlOpcodeKind.UMod: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
 
-            case HlOpcodeKind.Incr:
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Rem); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
 
-            case HlOpcodeKind.Decr:
+            // *dst = *a << *b
+            case HlOpcodeKind.Shl: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Shl); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
                 break;
+            }
+
+            // *dst = *a >> *b
+            case HlOpcodeKind.SShr: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Shr); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = *a >> *b
+            case HlOpcodeKind.UShr: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Shr); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = *a & *b
+            case HlOpcodeKind.And: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.And); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = *a | *b
+            case HlOpcodeKind.Or: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Or); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = *a ^ *b
+            case HlOpcodeKind.Xor: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+                var b = instruction.Parameters[2];
+
+                LoadLocal(il, locals, a);
+                LoadLocal(il, locals, b);
+                il.Emit(OpCodes.Xor); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = -(*a)
+            case HlOpcodeKind.Neg: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Neg); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // *dst = !(*a)
+            case HlOpcodeKind.Not: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+
+                LoadLocal(il, locals, a);
+                il.Emit(OpCodes.Not); // TODO: use a real method later...
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // (*dst)++
+            case HlOpcodeKind.Incr: {
+                var dst = instruction.Parameters[0];
+
+                LoadLocal(il, locals, dst);
+                il.Emit(OpCodes.Ldc_I4_1);
+                il.Emit(OpCodes.Add);
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // (*dst)--
+            case HlOpcodeKind.Decr: {
+                var dst = instruction.Parameters[0];
+
+                LoadLocal(il, locals, dst);
+                il.Emit(OpCodes.Ldc_I4_1);
+                il.Emit(OpCodes.Sub);
+                SetLocal(il, locals, dst);
+                break;
+            }
 
             case HlOpcodeKind.Call0:
                 break;

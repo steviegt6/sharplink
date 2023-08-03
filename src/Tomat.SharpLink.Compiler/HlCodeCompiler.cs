@@ -214,25 +214,32 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeVoid));
 
             case HlTypeKind.HUI8:
-                return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
+                return asmDef.MainModule.TypeSystem.Byte;
 
             case HlTypeKind.HUI16:
-                return asmDef.MainModule.ImportReference(typeof(HaxeUI16));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeUI16));
+                return asmDef.MainModule.TypeSystem.UInt16;
 
             case HlTypeKind.HI32:
-                return asmDef.MainModule.ImportReference(typeof(HaxeI32));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeI32));
+                return asmDef.MainModule.TypeSystem.Int32;
 
             case HlTypeKind.HI64:
-                return asmDef.MainModule.ImportReference(typeof(HaxeI64));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeI64));
+                return asmDef.MainModule.TypeSystem.UInt32;
 
             case HlTypeKind.HF32:
-                return asmDef.MainModule.ImportReference(typeof(HaxeF32));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeF32));
+                return asmDef.MainModule.TypeSystem.Single;
 
             case HlTypeKind.HF64:
-                return asmDef.MainModule.ImportReference(typeof(HaxeF64));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeF64));
+                return asmDef.MainModule.TypeSystem.Double;
 
             case HlTypeKind.HBOOL:
-                return asmDef.MainModule.ImportReference(typeof(HaxeBool));
+                // return asmDef.MainModule.ImportReference(typeof(HaxeBool));
+                return asmDef.MainModule.TypeSystem.Boolean;
 
             case HlTypeKind.HBYTES:
                 return asmDef.MainModule.ImportReference(typeof(HaxeBytes));
