@@ -10,7 +10,7 @@ public partial class HlCodeCompiler {
     private readonly HlCode code;
 
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
-    private int anonymousDelegateCounter = 0;
+    // private int anonymousDelegateCounter = 0;
 
     public HlCodeCompiler(HlCode code) {
         this.code = code;
@@ -261,8 +261,9 @@ public partial class HlCodeCompiler {
     }
 
     private TypeDefinition CreateAnonymousDelegate(AssemblyDefinition asmDef) {
-        var name = $"<>f__AnonymousDelegate{anonymousDelegateCounter++}";
-        var typeDef = new TypeDefinition(null, name, TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)));
+        /*var name = $"<>f__AnonymousDelegate{anonymousDelegateCounter++}";
+        var typeDef = new TypeDefinition(null, name, TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)));*/
+        var typeDef = CreateAnonymousType("", TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)), asmDef);
         typeDef.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
 
         var ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, asmDef.MainModule.TypeSystem.Void);
