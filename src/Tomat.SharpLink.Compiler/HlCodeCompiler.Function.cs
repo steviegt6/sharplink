@@ -205,7 +205,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Add); // TODO: use a real method later...
+                il.Emit(OpCodes.Add);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -218,7 +218,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Sub); // TODO: use a real method later...
+                il.Emit(OpCodes.Sub);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -231,7 +231,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Mul); // TODO: use a real method later...
+                il.Emit(OpCodes.Mul);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -244,7 +244,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Div); // TODO: use a real method later...
+                il.Emit(OpCodes.Div);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -257,7 +257,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Div); // TODO: use a real method later...
+                il.Emit(OpCodes.Div);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -270,7 +270,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Rem); // TODO: use a real method later...
+                il.Emit(OpCodes.Rem);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -283,7 +283,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Rem); // TODO: use a real method later...
+                il.Emit(OpCodes.Rem);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -296,7 +296,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Shl); // TODO: use a real method later...
+                il.Emit(OpCodes.Shl);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -309,7 +309,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Shr); // TODO: use a real method later...
+                il.Emit(OpCodes.Shr);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -322,7 +322,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Shr); // TODO: use a real method later...
+                il.Emit(OpCodes.Shr);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -335,7 +335,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.And); // TODO: use a real method later...
+                il.Emit(OpCodes.And);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -348,7 +348,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Or); // TODO: use a real method later...
+                il.Emit(OpCodes.Or);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -361,7 +361,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Xor); // TODO: use a real method later...
+                il.Emit(OpCodes.Xor);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -372,7 +372,7 @@ partial class HlCodeCompiler {
                 var a = instruction.Parameters[1];
 
                 LoadLocal(il, locals, a);
-                il.Emit(OpCodes.Neg); // TODO: use a real method later...
+                il.Emit(OpCodes.Neg);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -383,7 +383,7 @@ partial class HlCodeCompiler {
                 var a = instruction.Parameters[1];
 
                 LoadLocal(il, locals, a);
-                il.Emit(OpCodes.Not); // TODO: use a real method later...
+                il.Emit(OpCodes.Not);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -538,7 +538,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt);
                 il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -551,7 +551,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt);
                 il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -564,7 +564,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Cgt); // TODO: use a real method later...
+                il.Emit(OpCodes.Cgt);
                 il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -577,7 +577,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Cgt); // TODO: use a real method later...
+                il.Emit(OpCodes.Cgt);
                 il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -590,7 +590,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt_Un); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt_Un);
                 il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -603,7 +603,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt_Un); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt_Un);
                 il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -616,7 +616,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt);
                 il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -629,7 +629,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Clt); // TODO: use a real method later...
+                il.Emit(OpCodes.Clt);
                 il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -642,7 +642,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Ceq); // TODO: use a real method later...
+                il.Emit(OpCodes.Ceq);
                 il.Emit(OpCodes.Brtrue, markers[originalIndexForJump + offset]);
                 break;
             }
@@ -655,7 +655,7 @@ partial class HlCodeCompiler {
 
                 LoadLocal(il, locals, a);
                 LoadLocal(il, locals, b);
-                il.Emit(OpCodes.Ceq); // TODO: use a real method later...
+                il.Emit(OpCodes.Ceq);
                 il.Emit(OpCodes.Brfalse, markers[originalIndexForJump + offset]);
                 break;
             }
