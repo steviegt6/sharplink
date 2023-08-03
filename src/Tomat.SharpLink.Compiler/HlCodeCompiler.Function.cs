@@ -31,9 +31,17 @@ partial class HlCodeCompiler {
     private List<VariableDefinition> CreateMethodLocals(HlFunction fun, HlTypeFun funType, AssemblyDefinition asmDef) {
         var locals = new List<VariableDefinition>();
 
-        // Registers are also taken up by function arguments, which we don't
+        /*// Registers are also taken up by function arguments, which we don't
         // need to care about.
         foreach (var local in fun.Regs[funType.Arguments.Length..]) {
+            var localType = TypeReferenceFromHlTypeRef(local, asmDef);
+            locals.Add(new VariableDefinition(localType));
+        }*/
+
+        // TODO: When I have time to clean up and optimize code, make it so we
+        // don't lazily assign parameters to locals and treat them all like
+        // regular hl registers.
+        foreach (var local in fun.Regs) {
             var localType = TypeReferenceFromHlTypeRef(local, asmDef);
             locals.Add(new VariableDefinition(localType));
         }
@@ -43,13 +51,21 @@ partial class HlCodeCompiler {
 
     private void GenerateMethodBody(MethodDefinition method, List<VariableDefinition> locals, HlFunction fun, AssemblyDefinition asmDef) {
         var body = method.Body = new MethodBody(method);
-        var il = body.GetILProcessor();
-
-        // Placeholder.
-        il.Emit(OpCodes.Nop);
-        il.Emit(OpCodes.Ret);
-
         foreach (var local in locals)
             method.Body.Variables.Add(local);
+
+        var il = body.GetILProcessor();
+
+        // Assign every parameter to a local variable corresponding to a
+        // register.
+        for (var i = 0; i < method.Parameters.Count; i++) {
+            var param = method.Parameters[i];
+            il.Emit(OpCodes.Ldarg, param);
+            il.Emit(OpCodes.Stloc, locals[i]);
+        }
+
+        // Placeholder.
+        il.Emit(OpCodes.Ldloc, locals[^1]);
+        il.Emit(OpCodes.Ret);
     }
 }
