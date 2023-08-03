@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Mono.Cecil;
 
@@ -9,6 +10,7 @@ public partial class HlCodeCompiler {
     private readonly HlCode code;
 
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
+    private int anonymousDelegateCounter = 0;
 
     public HlCodeCompiler(HlCode code) {
         this.code = code;
@@ -256,6 +258,38 @@ public partial class HlCodeCompiler {
         var typeDef = new TypeDefinition(@namespace, name, attributes, baseType);
         typeDef.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
         return typeDef;
+    }
+
+    private TypeDefinition CreateAnonymousDelegate(AssemblyDefinition asmDef) {
+        var name = $"<>f__AnonymousDelegate{anonymousDelegateCounter++}";
+        var typeDef = new TypeDefinition(null, name, TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)));
+        typeDef.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
+
+        var ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, asmDef.MainModule.TypeSystem.Void);
+        ctor.Parameters.Add(new ParameterDefinition("object", ParameterAttributes.None, asmDef.MainModule.TypeSystem.Object));
+        ctor.Parameters.Add(new ParameterDefinition("method", ParameterAttributes.None, asmDef.MainModule.TypeSystem.IntPtr));
+        ctor.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
+        typeDef.Methods.Add(ctor);
+
+        return typeDef;
+    }
+
+    private void DefineAnonymousDelegate(TypeDefinition delegateType, TypeReference returnType, IEnumerable<TypeReference> parameterTypes, AssemblyDefinition asmDef) {
+        parameterTypes = parameterTypes.ToArray();
+
+        var invoke = new MethodDefinition("Invoke", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, returnType);
+        foreach (var parameterType in parameterTypes)
+            invoke.Parameters.Add(new ParameterDefinition(parameterType));
+        delegateType.Methods.Add(invoke);
+
+        var beginInvoke = new MethodDefinition("BeginInvoke", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, asmDef.MainModule.ImportReference(typeof(IAsyncResult)));
+        foreach (var parameterType in parameterTypes)
+            beginInvoke.Parameters.Add(new ParameterDefinition(parameterType));
+        delegateType.Methods.Add(beginInvoke);
+
+        var endInvoke = new MethodDefinition("EndInvoke", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, returnType);
+        endInvoke.Parameters.Add(new ParameterDefinition(asmDef.MainModule.ImportReference(typeof(IAsyncResult))));
+        delegateType.Methods.Add(endInvoke);
     }
 
     private static void ExtractNameAndNamespace(string fullTypeName, out string? @namespace, out string name) {
