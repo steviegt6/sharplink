@@ -17,8 +17,7 @@ partial class HlCodeCompiler {
         var enumDef = new TypeDefinition(
             enumNs ?? "",
             enumName,
-            TypeAttributes.AnsiClass
-          | TypeAttributes.BeforeFieldInit
+            TypeAttributes.BeforeFieldInit
           | TypeAttributes.Public
           | TypeAttributes.Abstract,
             asmDef.MainModule.TypeSystem.Object
@@ -47,8 +46,7 @@ partial class HlCodeCompiler {
             var nestedType = new TypeDefinition(
                 enumDef.Namespace ?? "",
                 construct.Name,
-                TypeAttributes.AnsiClass
-              | TypeAttributes.BeforeFieldInit
+                TypeAttributes.BeforeFieldInit
               | TypeAttributes.NestedPublic,
                 enumDef
             );

@@ -13,8 +13,6 @@ partial class HlCodeCompiler {
             name,
             TypeAttributes.Class
           | TypeAttributes.Public
-          | TypeAttributes.AutoClass
-          | TypeAttributes.AnsiClass
           | TypeAttributes.BeforeFieldInit,
             asmDef.MainModule.TypeSystem.Object // temporary
         );

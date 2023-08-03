@@ -15,8 +15,6 @@ partial class HlCodeCompiler {
             "",
             TypeAttributes.Class
           | TypeAttributes.NotPublic
-          | TypeAttributes.AutoClass
-          | TypeAttributes.AnsiClass
           | TypeAttributes.Sealed
           | TypeAttributes.BeforeFieldInit,
             asmDef.MainModule.TypeSystem.Object,
