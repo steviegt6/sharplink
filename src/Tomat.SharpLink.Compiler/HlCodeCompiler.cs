@@ -21,6 +21,14 @@ public partial class HlCodeCompiler {
         var asmNameDef = new AssemblyNameDefinition(name, new Version(1, 0, 0, 0));
         var asmDef = AssemblyDefinition.CreateAssembly(asmNameDef, name, ModuleKind.Dll);
 
+        CompileTypes(asmDef);
+        DecorateGlobals(asmDef);
+        CompileFunctions(asmDef);
+
+        return asmDef;
+    }
+
+    private void CompileTypes(AssemblyDefinition asmDef) {
         InitializeAbsNameGlobals();
 
         // Split into three steps.
@@ -44,7 +52,9 @@ public partial class HlCodeCompiler {
         // for things such as functions, etc.
         foreach (var type in hash.Code.Types)
             CompileType(type, asmDef);
+    }
 
+    private void DecorateGlobals(AssemblyDefinition asmDef) {
         for (var i = 0; i < hash.Code.Globals.Count; i++) {
             var global = hash.Code.Globals[i];
             if (global.Value is not { } value)
@@ -64,8 +74,11 @@ public partial class HlCodeCompiler {
             attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.Int32, i));
             type.CustomAttributes.Add(attr);
         }
+    }
 
-        return asmDef;
+    private void CompileFunctions(AssemblyDefinition asmDef) {
+        foreach (var func in hash.Code.Functions)
+            CompileFunction(func, asmDef);
     }
 
     private void ResolveType(HlType hlType, AssemblyDefinition asmDef) {
