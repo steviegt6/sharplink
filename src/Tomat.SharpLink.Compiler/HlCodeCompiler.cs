@@ -89,7 +89,7 @@ public partial class HlCodeCompiler {
 
         foreach (var func in hash.Code.Functions)
             CompileFunction(func, asmDef);
-        
+
         foreach (var native in hash.Code.Natives)
             CompileNative(native, asmDef);
     }
@@ -318,7 +318,6 @@ public partial class HlCodeCompiler {
         /*var name = $"<>f__AnonymousDelegate{anonymousDelegateCounter++}";
         var typeDef = new TypeDefinition(null, name, TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)));*/
         var typeDef = CreateAnonymousType("", TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public, asmDef.MainModule.ImportReference(typeof(MulticastDelegate)), asmDef);
-        typeDef.CustomAttributes.Add(new CustomAttribute(asmDef.MainModule.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes)!)));
 
         var ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, asmDef.MainModule.TypeSystem.Void);
         ctor.Parameters.Add(new ParameterDefinition("object", ParameterAttributes.None, asmDef.MainModule.TypeSystem.Object));
