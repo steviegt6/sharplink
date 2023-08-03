@@ -8,6 +8,8 @@ partial class HlCodeCompiler {
     private Dictionary<HlTypeWithObj, Dictionary<HlObjField, FieldDefinition>> objFieldDefs = new();
     private Dictionary<HlTypeWithObj, Dictionary<HlObjProto, FieldDefinition>> objProtoDefs = new();
 
+    private Dictionary<TypeDefinition, List<FieldDefinition>> objTypeDefProtos = new();
+
     private void ResolveHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Obj.Name, out var ns, out var name);
         var objDef = new TypeDefinition(
@@ -70,5 +72,19 @@ partial class HlCodeCompiler {
         var protoDefs = objProtoDefs[type];
         foreach (var protoDef in protoDefs.Values)
             objDef.Fields.Add(protoDef);
+
+        void reverseAddAllProtos(HlType? theType, List<FieldDefinition> protoFields) {
+            if (theType is not HlTypeWithObj theTypeObj)
+                return;
+
+            reverseAddAllProtos(theTypeObj.Obj.Super?.Value ?? null, protoFields);
+
+            var protoDefsForTheType = objProtoDefs[theTypeObj];
+            foreach (var proto in theTypeObj.Obj.Protos)
+                protoFields.Add(protoDefsForTheType[proto]);
+        }
+
+        var allProtos = objTypeDefProtos[objDef] = new List<FieldDefinition>();
+        reverseAddAllProtos(type, allProtos);
     }
 }

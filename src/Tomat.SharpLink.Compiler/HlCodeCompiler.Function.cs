@@ -585,13 +585,15 @@ partial class HlCodeCompiler {
                 var args = instruction.Parameters[3..];
 
                 var varDef = locals[args[0]];
-                var fieldDef = varDef.VariableType.Resolve().Fields[field];
+                // var fieldDef = varDef.VariableType.Resolve().Fields[field];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefProtos[varTypeDef][field];
 
                 LoadLocal(il, locals, args[0]);
                 il.Emit(OpCodes.Ldfld, fieldDef);
                 for (var i = 1; i < args.Length; i++)
                     LoadLocal(il, locals, args[i]);
-                il.Emit(OpCodes.Callvirt, fieldDef); // TODO: literally doesn't work
+                il.Emit(OpCodes.Callvirt, fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke"));
                 SetLocal(il, locals, dst);
                 break;
             }
