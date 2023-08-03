@@ -812,8 +812,11 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.RefOffset:
                 break;
 
-            case HlOpcodeKind.Nop:
+            case HlOpcodeKind.Nop: {
+                // Ironically, this is not a nop.
+                il.Emit(OpCodes.Nop);
                 break;
+            }
 
             case HlOpcodeKind.Last:
                 break;
