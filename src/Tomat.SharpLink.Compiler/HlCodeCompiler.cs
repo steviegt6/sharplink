@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -214,32 +215,31 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.TypeSystem.Void;
 
             case HlTypeKind.HUI8:
-                return asmDef.MainModule.TypeSystem.Byte;
+                return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
 
             case HlTypeKind.HUI16:
-                return asmDef.MainModule.TypeSystem.UInt16;
+                return asmDef.MainModule.ImportReference(typeof(HaxeUI16));
 
             case HlTypeKind.HI32:
-                return asmDef.MainModule.TypeSystem.Int32;
+                return asmDef.MainModule.ImportReference(typeof(HaxeI32));
 
             case HlTypeKind.HI64:
-                return asmDef.MainModule.TypeSystem.Int64;
+                return asmDef.MainModule.ImportReference(typeof(HaxeI64));
 
             case HlTypeKind.HF32:
-                return asmDef.MainModule.TypeSystem.Single;
+                return asmDef.MainModule.ImportReference(typeof(HaxeF32));
 
             case HlTypeKind.HF64:
-                return asmDef.MainModule.TypeSystem.Double;
+                return asmDef.MainModule.ImportReference(typeof(HaxeF64));
 
             case HlTypeKind.HBOOL:
-                return asmDef.MainModule.TypeSystem.Boolean;
+                return asmDef.MainModule.ImportReference(typeof(HaxeBool));
 
             case HlTypeKind.HBYTES:
-                throw new NotImplementedException();
+                return asmDef.MainModule.ImportReference(typeof(HaxeBytes));
 
-            // TODO: This will require special handling.
             case HlTypeKind.HDYN:
-                return asmDef.MainModule.TypeSystem.Object;
+                return asmDef.MainModule.ImportReference(typeof(HaxeDyn));
 
             case HlTypeKind.HFUN:
                 return funDefs[(HlTypeWithFun)type];
@@ -248,10 +248,10 @@ public partial class HlCodeCompiler {
                 return objDefs[(HlTypeWithObj)type];
 
             case HlTypeKind.HARRAY:
-                throw new NotImplementedException();
+                return asmDef.MainModule.ImportReference(typeof(HaxeArray));
 
             case HlTypeKind.HTYPE:
-                throw new NotImplementedException();
+                return asmDef.MainModule.ImportReference(typeof(HaxeType));
 
             case HlTypeKind.HREF:
                 throw new NotImplementedException();
@@ -266,10 +266,10 @@ public partial class HlCodeCompiler {
                 throw new NotImplementedException();
 
             case HlTypeKind.HENUM:
-                throw new NotImplementedException();
+                return enumDefs[(HlTypeWithEnum)type];
 
             case HlTypeKind.HNULL:
-                throw new NotImplementedException();
+                return asmDef.MainModule.ImportReference(typeof(HaxeNull<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
             case HlTypeKind.HMETHOD:
                 throw new NotImplementedException();
