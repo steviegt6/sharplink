@@ -212,7 +212,7 @@ public partial class HlCodeCompiler {
 
         switch (type.Kind) {
             case HlTypeKind.HVOID:
-                return asmDef.MainModule.TypeSystem.Void;
+                return asmDef.MainModule.ImportReference(typeof(HaxeVoid));
 
             case HlTypeKind.HUI8:
                 return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
