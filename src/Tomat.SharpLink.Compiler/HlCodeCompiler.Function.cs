@@ -594,8 +594,8 @@ partial class HlCodeCompiler {
                 var varTypeDef = varDef.VariableType.Resolve();
                 var fieldDef = objTypeDefProtos[varTypeDef][field];
 
-                LoadLocal(il, locals, args[0]);
                 il.Emit(OpCodes.Ldfld, fieldDef);
+                LoadLocal(il, locals, args[0]);
                 for (var i = 1; i < args.Length; i++)
                     LoadLocal(il, locals, args[i]);
                 il.Emit(OpCodes.Callvirt, fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke"));

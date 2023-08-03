@@ -39,7 +39,8 @@ partial class HlCodeCompiler {
             // TODO: Handle property stuff...
             var protoDef = new FieldDefinition(
                 proto.Name,
-                FieldAttributes.Public,
+                FieldAttributes.Public
+              | FieldAttributes.Static,
                 asmDef.MainModule.TypeSystem.Object // temporary
             );
             protoDefs.Add(proto, protoDef);
