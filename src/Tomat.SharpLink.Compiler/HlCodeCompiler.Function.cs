@@ -6,33 +6,34 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private int methodCounter = 0;
+    private int methodCounter;
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
-        var method = CreateMethod(fun, asmDef);
-        var locals = CreateMethodLocals(fun, asmDef);
-        GenerateMethodBody(fun, locals, asmDef);
+        var funType = ((HlTypeWithFun)fun.Type.Value!).Fun;
+        var method = CreateMethod(fun, funType, asmDef);
+        var locals = CreateMethodLocals(fun, funType, asmDef);
+        GenerateMethodBody(method, locals, fun, asmDef);
 
         asmDef.MainModule.GetType("<Module>").Methods.Add(method);
     }
 
-    private MethodDefinition CreateMethod(HlFunction fun, AssemblyDefinition asmDef) {
-        var funType = (HlTypeWithFun)fun.Type.Value!;
-        var retType = TypeReferenceFromHlTypeRef(funType.Fun.ReturnType, asmDef);
-        var paramTypes = funType.Fun.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
+    private MethodDefinition CreateMethod(HlFunction fun, HlTypeFun funType, AssemblyDefinition asmDef) {
+        var retType = TypeReferenceFromHlTypeRef(funType.ReturnType, asmDef);
+        var paramTypes = funType.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
         var method = new MethodDefinition($"fun{methodCounter++}", MethodAttributes.Public | MethodAttributes.Static, retType);
 
         var argCounter = 0;
         foreach (var paramType in paramTypes)
             method.Parameters.Add(new ParameterDefinition($"arg{argCounter++}", ParameterAttributes.None, paramType));
-
         return method;
     }
 
-    private List<VariableDefinition> CreateMethodLocals(HlFunction fun, AssemblyDefinition asmDef) {
+    private List<VariableDefinition> CreateMethodLocals(HlFunction fun, HlTypeFun funType, AssemblyDefinition asmDef) {
         var locals = new List<VariableDefinition>();
 
-        foreach (var local in fun.Regs) {
+        // Registers are also taken up by function arguments, which we don't
+        // need to care about.
+        foreach (var local in fun.Regs[funType.Arguments.Length..]) {
             var localType = TypeReferenceFromHlTypeRef(local, asmDef);
             locals.Add(new VariableDefinition(localType));
         }
@@ -40,16 +41,15 @@ partial class HlCodeCompiler {
         return locals;
     }
 
-    private void GenerateMethodBody(HlFunction fun, List<VariableDefinition> locals, AssemblyDefinition asmDef) {
-        /*var body = new MethodBody(method);
+    private void GenerateMethodBody(MethodDefinition method, List<VariableDefinition> locals, HlFunction fun, AssemblyDefinition asmDef) {
+        var body = method.Body = new MethodBody(method);
         var il = body.GetILProcessor();
-        
+
+        // Placeholder.
+        il.Emit(OpCodes.Nop);
+        il.Emit(OpCodes.Ret);
+
         foreach (var local in locals)
             method.Body.Variables.Add(local);
-        
-        foreach (var instr in fun.Instrs)
-            CompileInstruction(instr, il, locals, asmDef);
-        
-        method.Body = body;*/
     }
 }
