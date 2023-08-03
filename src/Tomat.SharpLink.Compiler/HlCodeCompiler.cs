@@ -166,14 +166,13 @@ public partial class HlCodeCompiler {
             case HlTypeKind.HF32:
             case HlTypeKind.HF64:
             case HlTypeKind.HBOOL:
-                // These are primitive types with .NET equivalents.
-                return;
-
             case HlTypeKind.HBYTES:
             case HlTypeKind.HDYN:
             case HlTypeKind.HTYPE:
             case HlTypeKind.HARRAY:
-                // TODO: These are HL-only primitives, how will we handle them?
+                // These are HL-defined primitive types that we make our own
+                // equivalents for in our stdlib implementation. We skip them
+                // here since they contain not actual information.
                 return;
         }
 
