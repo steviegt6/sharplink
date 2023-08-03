@@ -144,18 +144,22 @@ partial class HlCodeCompiler {
                 // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.
                 throw new NotImplementedException();
 
-            // TODO: Seems like sometimes the destination can be HaxeBytes, so
-            // we may want to implement a check and handle conversion.
-            //   haxeBytes = (HaxeBytes)(object)"Main";
-            //   ldstr "Date"
-            //   stloc 3 ([3] class [Tomat.SharpLink.CoreLib]Tomat.SharpLink.HaxeBytes)
             // *dst = strings[key]
             case HlOpcodeKind.String: {
                 var destIndex = instruction.Parameters[0];
                 var stringKey = instruction.Parameters[1];
 
+                // TODO: Better check.
+                var isDestBytes = locals[destIndex].VariableType.FullName == "Tomat.SharpLink.HaxeBytes";
+
                 PushCached<string>(il, stringKey);
-                // PushConverter<string, HaxeString>(il, asmDef);
+
+                if (isDestBytes) {
+                    // Strings can be pushed directly to HBYTES, so we need to
+                    // handle this ourselves.
+                    PushConverter<string, HaxeBytes>(il, asmDef);
+                }
+
                 SetLocal(il, locals, destIndex);
                 break;
             }
