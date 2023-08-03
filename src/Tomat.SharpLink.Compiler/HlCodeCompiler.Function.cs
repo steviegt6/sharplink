@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -185,6 +186,10 @@ partial class HlCodeCompiler {
         var module = asmDef.MainModule.GetType("<Module>");
         var field = module.Fields.FirstOrDefault(field => field.Name == $"global{index}");
         il.Emit(OpCodes.Stsfld, field);
+    }
+
+    private TypeReference GetTypeForLocal(List<VariableDefinition> locals, int index) {
+        return locals[index].VariableType;
     }
 
     private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef, int originalIndex, Dictionary<int, Instruction> markers) {
@@ -940,8 +945,26 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.GetTID:
                 break;
 
-            case HlOpcodeKind.Ref:
+            case HlOpcodeKind.Ref: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                // Call HaxeRef.MakeRef<T>(src);
+                /*var srcType = GetTypeForLocal(locals, src);
+                var haxeRef = asmDef.MainModule.ImportReference(typeof(HaxeRef)).Resolve();
+                var haxeRefMakeRef = haxeRef.Methods.First(m => m.Name == "MakeRef" && m.Parameters.Count == 1);
+                var haxeRefMakeRefGeneric = new GenericInstanceMethod(haxeRefMakeRef);
+                haxeRefMakeRefGeneric.GenericArguments.Add(asmDef.MainModule.ImportReference(srcType));*/
+
+                var genericArgument = GetTypeForLocal(locals, src);
+                var haxeRefType = asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(genericArgument);
+                var haxeRefCtor = asmDef.MainModule.ImportReference(haxeRefType.Resolve().Methods.First(x => x.IsConstructor && x.Parameters.Count == 1)).MakeHostInstanceGeneric(genericArgument);
+
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Newobj, haxeRefCtor);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.Unref:
                 break;

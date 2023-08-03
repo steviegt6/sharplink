@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -17,5 +18,25 @@ public static class CecilUtils {
         return new MethodReference(".ctor", type.Module.TypeSystem.Void, type) {
             HasThis = true,
         };
+    }
+
+    public static MethodReference MakeHostInstanceGeneric(this MethodReference method, params TypeReference[] args) {
+        var reference = new MethodReference(
+            method.Name,
+            method.ReturnType,
+            method.DeclaringType.MakeGenericInstanceType(args)
+        ) {
+            HasThis = method.HasThis,
+            ExplicitThis = method.ExplicitThis,
+            CallingConvention = method.CallingConvention,
+        };
+        
+        foreach (var param in method.Parameters)
+            reference.Parameters.Add(new ParameterDefinition(param.ParameterType));
+        
+        foreach (var genericParam in method.GenericParameters)
+            reference.GenericParameters.Add(new GenericParameter(genericParam.Name, reference));
+        
+        return reference;
     }
 }
