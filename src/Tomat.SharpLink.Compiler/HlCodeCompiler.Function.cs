@@ -568,7 +568,7 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.CallN: {
                 var dst = instruction.Parameters[0];
                 var fun = instruction.Parameters[1];
-                var args = instruction.Parameters[2..];
+                var args = instruction.Parameters[3..];
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
@@ -579,8 +579,22 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            case HlOpcodeKind.CallMethod:
+            case HlOpcodeKind.CallMethod: {
+                var dst = instruction.Parameters[0];
+                var field = instruction.Parameters[1];
+                var args = instruction.Parameters[3..];
+
+                var varDef = locals[args[0]];
+                var fieldDef = varDef.VariableType.Resolve().Fields[field];
+
+                LoadLocal(il, locals, args[0]);
+                il.Emit(OpCodes.Ldfld, fieldDef);
+                for (var i = 1; i < args.Length; i++)
+                    LoadLocal(il, locals, args[i]);
+                il.Emit(OpCodes.Callvirt, fieldDef); // TODO: literally doesn't work
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.CallThis:
                 break;
@@ -933,19 +947,19 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.Setref:
                 break;
 
-            case HlOpcodeKind.OMakeEnum:
+            case HlOpcodeKind.MakeEnum:
                 break;
 
-            case HlOpcodeKind.OEnumAlloc:
+            case HlOpcodeKind.EnumAlloc:
                 break;
 
-            case HlOpcodeKind.OEnumIndex:
+            case HlOpcodeKind.EnumIndex:
                 break;
 
-            case HlOpcodeKind.OEnumField:
+            case HlOpcodeKind.EnumField:
                 break;
 
-            case HlOpcodeKind.OSetEnumField:
+            case HlOpcodeKind.SetEnumField:
                 break;
 
             case HlOpcodeKind.Assert:

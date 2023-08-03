@@ -105,11 +105,11 @@ public enum HlOpcodeKind {
     Unref,
     Setref,
 
-    OMakeEnum,
-    OEnumAlloc,
-    OEnumIndex,
-    OEnumField,
-    OSetEnumField,
+    MakeEnum,
+    EnumAlloc,
+    EnumIndex,
+    EnumField,
+    SetEnumField,
 
     Assert,
     RefData,
@@ -223,11 +223,11 @@ public static class HlOpcodeKindExtensions {
         { HlOpcodeKind.Unref,            2 },
         { HlOpcodeKind.Setref,           2 },
 
-        { HlOpcodeKind.OMakeEnum,       -1 },
-        { HlOpcodeKind.OEnumAlloc,       2 },
-        { HlOpcodeKind.OEnumIndex,       2 },
-        { HlOpcodeKind.OEnumField,       4 },
-        { HlOpcodeKind.OSetEnumField,    3 },
+        { HlOpcodeKind.MakeEnum,       -1 },
+        { HlOpcodeKind.EnumAlloc,       2 },
+        { HlOpcodeKind.EnumIndex,       2 },
+        { HlOpcodeKind.EnumField,       4 },
+        { HlOpcodeKind.SetEnumField,    3 },
 
         { HlOpcodeKind.Assert,           0 },
         { HlOpcodeKind.RefData,          2 },

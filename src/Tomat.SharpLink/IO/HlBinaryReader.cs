@@ -326,7 +326,7 @@ public sealed class HlBinaryReader {
                     case HlOpcodeKind.CallClosure:
                     case HlOpcodeKind.CallMethod:
                     case HlOpcodeKind.CallThis:
-                    case HlOpcodeKind.OMakeEnum: {
+                    case HlOpcodeKind.MakeEnum: {
                         var p1 = ReadIndex();
                         var p2 = ReadIndex();
                         var p3 = ReadByte();
