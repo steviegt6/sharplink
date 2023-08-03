@@ -262,7 +262,8 @@ public partial class HlCodeCompiler {
                 throw new NotImplementedException();
 
             case HlTypeKind.HABSTRACT:
-                throw new NotImplementedException();
+                // TODO: Pointers definitely aren't the solution..., but...
+                return asmDef.MainModule.TypeSystem.IntPtr;
 
             case HlTypeKind.HENUM:
                 return enumDefs[(HlTypeWithEnum)type];
