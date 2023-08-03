@@ -14,4 +14,8 @@ public class HaxeBytes {
     public static implicit operator HaxeBytes(byte[] value) => new(value);
 
     public static implicit operator byte[](HaxeBytes value) => value.Value;
+
+    public static implicit operator HaxeBytes(string value) => new(value);
+
+    // TODO: public static implicit operator string(HaxeBytes value) => ;
 }
