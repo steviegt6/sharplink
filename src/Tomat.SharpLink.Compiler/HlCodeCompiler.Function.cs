@@ -94,6 +94,18 @@ partial class HlCodeCompiler {
         il.Emit(OpCodes.Stloc, locals[index]);
     }
 
+    private void LoadGlobal(ILProcessor il, int index, AssemblyDefinition asmDef) {
+        var module = asmDef.MainModule.GetType("<Module>");
+        var field = module.Fields.FirstOrDefault(field => field.Name == $"global{index}");
+        il.Emit(OpCodes.Ldsfld, field);
+    }
+
+    private void SetGlobal(ILProcessor il, int index, AssemblyDefinition asmDef) {
+        var module = asmDef.MainModule.GetType("<Module>");
+        var field = module.Fields.FirstOrDefault(field => field.Name == $"global{index}");
+        il.Emit(OpCodes.Stsfld, field);
+    }
+
     private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef) {
         switch (instruction.Kind) {
             // *dst = *src
@@ -386,21 +398,27 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // *dst = (*a)()
             case HlOpcodeKind.Call0:
                 break;
 
+            // *dst = (*a)(*b)
             case HlOpcodeKind.Call1:
                 break;
 
+            // *dst = (*a)(*b, *c)
             case HlOpcodeKind.Call2:
                 break;
 
+            // *dst = (*a)(*b, *c, *d)
             case HlOpcodeKind.Call3:
                 break;
 
+            // *dst = (*a)(*b, *c, *d, *e)
             case HlOpcodeKind.Call4:
                 break;
 
+            // *dst = (*a)(...)
             case HlOpcodeKind.CallN:
                 break;
 
@@ -422,11 +440,25 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.VirtualClosure:
                 break;
 
-            case HlOpcodeKind.GetGlobal:
-                break;
+            // *dst = *a
+            case HlOpcodeKind.GetGlobal: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
 
-            case HlOpcodeKind.SetGlobal:
+                LoadGlobal(il, a, asmDef);
+                SetLocal(il, locals, dst);
                 break;
+            }
+
+            // *dst = *a
+            case HlOpcodeKind.SetGlobal: {
+                var dst = instruction.Parameters[0];
+                var a = instruction.Parameters[1];
+
+                LoadLocal(il, locals, a);
+                SetGlobal(il, dst, asmDef);
+                break;
+            }
 
             case HlOpcodeKind.Field:
                 break;

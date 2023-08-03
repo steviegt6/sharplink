@@ -23,7 +23,7 @@ public partial class HlCodeCompiler {
         var asmDef = AssemblyDefinition.CreateAssembly(asmNameDef, name, ModuleKind.Dll);
 
         CompileTypes(asmDef);
-        DecorateGlobals(asmDef);
+        DeclareAndDecorateGlobals(asmDef);
         CompileFunctions(asmDef);
 
         return asmDef;
@@ -55,25 +55,28 @@ public partial class HlCodeCompiler {
             CompileType(type, asmDef);
     }
 
-    private void DecorateGlobals(AssemblyDefinition asmDef) {
+    private void DeclareAndDecorateGlobals(AssemblyDefinition asmDef) {
         for (var i = 0; i < hash.Code.Globals.Count; i++) {
             var global = hash.Code.Globals[i];
             if (global.Value is not { } value)
                 throw new InvalidOperationException($"Encountered global with missing value.");
 
-            // Handled in HlCodeCompiler.HlTypeWithAbsName.cs
-            if (value is HlTypeWithAbsName)
-                continue;
-
             var type = value switch {
                 HlTypeWithObj obj => objDefs[obj],
                 HlTypeWithEnum @enum => enumDefs[@enum],
+                HlTypeWithAbsName _ => asmDef.MainModule.TypeSystem.IntPtr,
                 _ => throw new InvalidOperationException($"Encountered global with unknown type {value.GetType().Name}.")
             };
 
+            var globalField = new FieldDefinition($"global{i}", FieldAttributes.Public | FieldAttributes.Static, type);
+            asmDef.MainModule.GetType("<Module>").Fields.Add(globalField);
+
+            if (type is not TypeDefinition typeDef)
+                continue;
+
             var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkGlobalAttribute).GetConstructor(new[] { typeof(int) })));
             attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.Int32, i));
-            type.CustomAttributes.Add(attr);
+            typeDef.CustomAttributes.Add(attr);
         }
     }
 
