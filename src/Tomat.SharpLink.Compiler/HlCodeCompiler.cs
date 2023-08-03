@@ -207,7 +207,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.TypeSystem.Object;
 
             case HlTypeKind.HFUN:
-                throw new NotImplementedException();
+                return funDefs[(HlTypeWithFun)type];
 
             case HlTypeKind.HOBJ:
                 return objDefs[(HlTypeWithObj)type];
