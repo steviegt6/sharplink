@@ -603,20 +603,24 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: used
             case HlOpcodeKind.CallThis:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.CallClosure:
                 break;
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.StaticClosure:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: used
             case HlOpcodeKind.InstanceClosure:
                 break;
 
             case HlOpcodeKind.VirtualClosure:
-                break;
+                throw new NotImplementedException();
 
             // *dst = *a
             case HlOpcodeKind.GetGlobal: {
@@ -638,23 +642,29 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: used
             case HlOpcodeKind.Field:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.SetField:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.GetThis:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.SetThis:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.DynGet:
                 break;
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.DynSet:
-                break;
+                throw new NotImplementedException();
 
             // Jump to offset if true.
             case HlOpcodeKind.JTrue: {
@@ -834,6 +844,7 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: used
             case HlOpcodeKind.ToDyn:
                 break;
 
@@ -868,12 +879,15 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: used
             case HlOpcodeKind.SafeCast:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.UnsafeCast:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.ToVirtual:
                 break;
 
@@ -891,60 +905,79 @@ partial class HlCodeCompiler {
                 break;
             }
 
+            // TODO: used
             case HlOpcodeKind.Throw:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.Rethrow:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.Switch:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.NullCheck:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.Trap:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.EndTrap:
                 break;
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.GetI8:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: used
             case HlOpcodeKind.GetI16:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.GetMem:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.GetArray:
                 break;
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.SetI8:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: used
             case HlOpcodeKind.SetI16:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.SetMem:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.SetArray:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.New:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.ArraySize:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.Type:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.GetType:
                 break;
 
+            // TODO: used
             case HlOpcodeKind.GetTID:
                 break;
 
@@ -980,29 +1013,37 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.Setref:
                 throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.MakeEnum:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumAlloc:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumIndex:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumField:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.SetEnumField:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.Assert:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.RefData:
-                break;
+                throw new NotImplementedException();
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.RefOffset:
-                break;
+                throw new NotImplementedException();
 
             case HlOpcodeKind.Nop: {
                 // Ironically, this is not a nop.
@@ -1010,11 +1051,15 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            case HlOpcodeKind.Last:
+            case HlOpcodeKind.Last: {
+                // not a real op-code
+                // throw here maybe?
                 break;
+            }
 
-            default:
-                throw new ArgumentOutOfRangeException();
+            default: {
+                throw new ArgumentOutOfRangeException(nameof(instruction));
+            }
         }
     }
 
