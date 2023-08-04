@@ -1,6 +1,6 @@
 # sharplink
 
-sharplink is a fully managed [HashLink](https://github.com/HaxeFoundation/hashlink) virtual machine reimplementation for the CLI (.NET) platform.
+A fully managed [HashLink](https://github.com/HaxeFoundation/hashlink) virtual machine reimplementation for the CLI (.NET) platform.
 
 ## What is sharplink?
 
