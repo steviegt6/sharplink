@@ -590,7 +590,6 @@ partial class HlCodeCompiler {
                 var args = instruction.Parameters[3..];
 
                 var varDef = locals[args[0]];
-                // var fieldDef = varDef.VariableType.Resolve().Fields[field];
                 var varTypeDef = varDef.VariableType.Resolve();
                 var fieldDef = objTypeDefProtos[varTypeDef][field];
 
@@ -604,8 +603,23 @@ partial class HlCodeCompiler {
             }
 
             // TODO: used
-            case HlOpcodeKind.CallThis:
+            case HlOpcodeKind.CallThis: {
+                var dst = instruction.Parameters[0];
+                var field = instruction.Parameters[1];
+                var args = instruction.Parameters[3..];
+
+                var varDef = locals[0];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefProtos[varTypeDef][field];
+
+                il.Emit(OpCodes.Ldfld, fieldDef);
+                il.Emit(OpCodes.Ldarg_0);
+                foreach (var arg in args)
+                    LoadLocal(il, locals, arg);
+                il.Emit(OpCodes.Callvirt, fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke"));
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // TODO: used
             case HlOpcodeKind.CallClosure:

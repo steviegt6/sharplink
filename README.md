@@ -56,7 +56,7 @@ Opcode implementation status (55/99, ~55%):
 | Call4           | 🟢     |
 | CallN           | 🟢     |
 | CallMethod      | 🟡     |
-| CallThis        | 🔴     |
+| CallThis        | 🟡     |
 | CallClosure     | 🔴     |
 | StaticClosure   | 🔴     |
 | InstanceClosure | 🔴     |
