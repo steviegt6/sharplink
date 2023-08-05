@@ -1012,9 +1012,23 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.UnsafeCast:
                 break;
 
-            // TODO: used
-            case HlOpcodeKind.ToVirtual:
+            case HlOpcodeKind.ToVirtual: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                // TTo SharpLinkCastHelper::CastVirtual<TFrom, TTo>(TFrom);
+                var toVirtual = asmDef.MainModule.ImportReference(typeof(SharpLinkCastHelper).GetMethod(nameof(SharpLinkCastHelper.CastVirtual)));
+                var fromType = locals[src].VariableType;
+                var toType = locals[dst].VariableType;
+                var genericToVirtual = new GenericInstanceMethod(toVirtual);
+                genericToVirtual.GenericArguments.Add(fromType);
+                genericToVirtual.GenericArguments.Add(toType);
+
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Call, genericToVirtual);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.Label: {
                 // no-op

@@ -21,7 +21,7 @@ Long-term goals:
 - [ ] transpile a "Hello, world!" app,
 - [ ] rewrite compiler to produce more .NET-like IL (define methods instead of delegate fields, etc.).
 
-Opcode implementation status (61/99, ~61%):
+Opcode implementation status (64/99, ~64%):
 
 | Opcode Name     | ⚪[^1] |
 | --------------- | ------ |
@@ -90,7 +90,7 @@ Opcode implementation status (61/99, ~61%):
 | ToInt           | 🟢     |
 | SafeCast        | 🔴     |
 | UnsafeCast      | 🔴     |
-| ToVirtual       | 🔴     |
+| ToVirtual       | 🟡     |
 | Label           | 🟢     |
 | Ret             | 🟢     |
 | Throw           | 🔴     |
