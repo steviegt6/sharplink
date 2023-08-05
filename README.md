@@ -57,7 +57,7 @@ Opcode implementation status (61/99, ~61%):
 | CallN           | 🟢     |
 | CallMethod      | 🟡     |
 | CallThis        | 🟡     |
-| CallClosure     | 🔴     |
+| CallClosure     | 🟡     |
 | StaticClosure   | 🔴     |
 | InstanceClosure | 🔴     |
 | VirtualClosure  | 🔴     |
@@ -96,7 +96,7 @@ Opcode implementation status (61/99, ~61%):
 | Throw           | 🔴     |
 | Rethrow         | 🔴     |
 | Switch          | 🔴     |
-| NullCheck       | 🔴     |
+| NullCheck       | 🟢     |
 | Trap            | 🔴     |
 | EndTrap         | 🔴     |
 | GetI8           | 🔴     |

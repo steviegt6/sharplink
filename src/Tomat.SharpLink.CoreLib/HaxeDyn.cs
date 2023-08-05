@@ -17,4 +17,8 @@ public class HaxeDyn {
     public void SetField(string name, object? value) {
         Value?.GetType().GetField(name, BindingFlags.Public | BindingFlags.Instance)?.SetValue(Value, value);
     }
+
+    public void InvokeDynamic(params object?[] args) {
+        
+    }
 }

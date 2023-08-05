@@ -620,9 +620,54 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
-            case HlOpcodeKind.CallClosure:
+            case HlOpcodeKind.CallClosure: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var args = instruction.Parameters[3..];
+
+                var varDef = locals[fun];
+                var varTypeDef = varDef.VariableType.Resolve();
+
+                var dynamic = varTypeDef.FullName == "Tomat.SharpLink.HaxeDyn";
+                var invokeDef = dynamic ? varTypeDef.Methods.First(m => m.Name == "InvokeDynamic") : varTypeDef.Methods.First(m => m.Name == "Invoke");
+
+                LoadLocal(il, locals, fun);
+
+                if (dynamic) {
+                    // pass in as params object[]
+                    il.Emit(OpCodes.Ldc_I4, args.Length);
+                    il.Emit(OpCodes.Newarr, asmDef.MainModule.ImportReference(typeof(object)));
+
+                    for (var i = 0; i < args.Length; i++) {
+                        il.Emit(OpCodes.Dup);
+                        il.Emit(OpCodes.Ldc_I4, i);
+                        LoadLocal(il, locals, args[i]);
+                        if (locals[args[i]].VariableType.Resolve().IsValueType)
+                            il.Emit(OpCodes.Box, locals[args[i]].VariableType.Resolve());
+                        il.Emit(OpCodes.Stelem_Ref);
+                    }
+                }
+                else {
+                    for (var i = 0; i < args.Length; i++) {
+                        var localArg = locals[args[i]];
+
+                        LoadLocal(il, locals, args[i]);
+
+                        if (invokeDef.Parameters[i].ParameterType.FullName == "Tomat.SharpLink.HaxeDyn" && localArg.VariableType.FullName != "Tomat.SharpLink.HaxeDyn") {
+                            if (localArg.VariableType.Resolve().IsValueType)
+                                il.Emit(OpCodes.Box, localArg.VariableType.Resolve());
+
+                            var dynDef = asmDef.MainModule.ImportReference(typeof(HaxeDyn));
+                            var dynCtor = dynDef.Resolve().Methods.First(m => m.IsConstructor && m.Parameters.Count == 1);
+                            il.Emit(OpCodes.Newobj, asmDef.MainModule.ImportReference(dynCtor));
+                        }
+                    }
+                }
+
+                il.Emit(OpCodes.Callvirt, asmDef.MainModule.ImportReference(invokeDef));
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.StaticClosure:
@@ -997,9 +1042,23 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.Switch:
                 break;
 
-            // TODO: used
-            case HlOpcodeKind.NullCheck:
+            case HlOpcodeKind.NullCheck: {
+                var reg = instruction.Parameters[0];
+
+                // if (reg == null) throw SharpLinkExceptionHelper.CreateNullCheckException();
+
+                var createNullCheckException = asmDef.MainModule.ImportReference(typeof(SharpLinkExceptionHelper).GetMethod(nameof(SharpLinkExceptionHelper.CreateNullCheckException)));
+                var label = il.Create(OpCodes.Nop);
+
+                LoadLocal(il, locals, reg);
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ceq);
+                il.Emit(OpCodes.Brfalse, label);
+                il.Emit(OpCodes.Call, createNullCheckException);
+                il.Emit(OpCodes.Throw);
+                il.Append(label);
                 break;
+            }
 
             // TODO: used
             case HlOpcodeKind.Trap:
