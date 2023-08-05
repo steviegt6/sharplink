@@ -172,6 +172,21 @@ partial class HlCodeCompiler {
         il.Emit(OpCodes.Ldloc, locals[index]);
     }
 
+    private void LoadLocalThatMayNeedToBeConvertedToHaxeDyn(ILProcessor il, List<VariableDefinition> locals, int index, TypeReference targetType, AssemblyDefinition asmDef) {
+        LoadLocal(il, locals, index);
+
+        var localVar = locals[index];
+
+        if (targetType.FullName != "Tomat.SharpLink.HaxeDyn" || localVar.VariableType.FullName == "Tomat.SharpLink.HaxeDyn")
+            return;
+
+        if (localVar.VariableType.IsValueType)
+            il.Emit(OpCodes.Box, localVar.VariableType);
+
+        var haxeDynCtor = asmDef.MainModule.ImportReference(typeof(HaxeDyn).GetConstructor(new[] { typeof(object) }));
+        il.Emit(OpCodes.Newobj, haxeDynCtor);
+    }
+
     private void SetLocal(ILProcessor il, List<VariableDefinition> locals, int index) {
         il.Emit(OpCodes.Stloc, locals[index]);
     }
@@ -509,7 +524,7 @@ partial class HlCodeCompiler {
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
-                LoadLocal(il, locals, arg);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg, def.Parameters[0].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
                 break;
@@ -524,8 +539,8 @@ partial class HlCodeCompiler {
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
-                LoadLocal(il, locals, arg1);
-                LoadLocal(il, locals, arg2);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
                 break;
@@ -541,9 +556,9 @@ partial class HlCodeCompiler {
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
-                LoadLocal(il, locals, arg1);
-                LoadLocal(il, locals, arg2);
-                LoadLocal(il, locals, arg3);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg3, def.Parameters[2].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
                 break;
@@ -560,10 +575,10 @@ partial class HlCodeCompiler {
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
-                LoadLocal(il, locals, arg1);
-                LoadLocal(il, locals, arg2);
-                LoadLocal(il, locals, arg3);
-                LoadLocal(il, locals, arg4);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg3, def.Parameters[2].ParameterType, asmDef);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg4, def.Parameters[3].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
                 break;
@@ -577,8 +592,9 @@ partial class HlCodeCompiler {
 
                 var def = ResolveDefinitionFromFIndex(fun);
 
-                foreach (var arg in args)
-                    LoadLocal(il, locals, arg);
+                for (var i = 0; i < args.Length; i++)
+                    LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i].ParameterType, asmDef);
+
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
                 break;
@@ -592,12 +608,13 @@ partial class HlCodeCompiler {
                 var varDef = locals[args[0]];
                 var varTypeDef = varDef.VariableType.Resolve();
                 var fieldDef = objTypeDefProtos[varTypeDef][field];
+                var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
-                LoadLocal(il, locals, args[0]);
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[0], def.Parameters[0].ParameterType, asmDef);
                 for (var i = 1; i < args.Length; i++)
-                    LoadLocal(il, locals, args[i]);
-                il.Emit(OpCodes.Callvirt, fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke"));
+                    LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i].ParameterType, asmDef);
+                il.Emit(OpCodes.Callvirt, def);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -610,12 +627,13 @@ partial class HlCodeCompiler {
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
                 var fieldDef = objTypeDefProtos[varTypeDef][field];
+                var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
-                il.Emit(OpCodes.Ldarg_0);
-                foreach (var arg in args)
-                    LoadLocal(il, locals, arg);
-                il.Emit(OpCodes.Callvirt, fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke"));
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, 0, def.Parameters[0].ParameterType, asmDef);
+                for (var i = 0; i < args.Length; i++)
+                    LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i + 1].ParameterType, asmDef);
+                il.Emit(OpCodes.Callvirt, def);
                 SetLocal(il, locals, dst);
                 break;
             }
@@ -1055,18 +1073,7 @@ partial class HlCodeCompiler {
                 var varType = locals[localIndex].VariableType.Resolve();
                 var retType = method.ReturnType.Resolve();
 
-                if (retType.FullName == "Tomat.SharpLink.HaxeDyn" && varType.FullName != "Tomat.SharpLink.HaxDyn") {
-                    il.Emit(OpCodes.Ldloc, locals[localIndex]);
-
-                    if (varType.IsValueType)
-                        il.Emit(OpCodes.Box, asmDef.MainModule.ImportReference(varType));
-
-                    il.Emit(OpCodes.Newobj, asmDef.MainModule.ImportReference(typeof(HaxeDyn).GetConstructor(new[] { typeof(object) })));
-                }
-                else {
-                    il.Emit(OpCodes.Ldloc, locals[localIndex]);
-                }
-
+                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, localIndex, retType, asmDef);
                 il.Emit(OpCodes.Ret);
                 break;
             }
