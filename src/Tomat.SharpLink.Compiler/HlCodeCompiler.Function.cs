@@ -1044,9 +1044,17 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
-            case HlOpcodeKind.Throw:
+            case HlOpcodeKind.Throw: {
+                var reg = instruction.Parameters[0];
+
+                // SharpLinkExceptionHelper::CreateNetExceptionFromHaxeException(SharpLinkException);
+                var createNetExceptionFromHaxeException = asmDef.MainModule.ImportReference(typeof(SharpLinkExceptionHelper).GetMethod(nameof(SharpLinkExceptionHelper.CreateNetExceptionFromHaxeException)));
+
+                LoadLocal(il, locals, reg);
+                il.Emit(OpCodes.Call, createNetExceptionFromHaxeException);
+                il.Emit(OpCodes.Throw);
                 break;
+            }
 
             // TODO: used
             case HlOpcodeKind.Rethrow:
@@ -1114,9 +1122,15 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.SetArray:
                 break;
 
-            // TODO: used
-            case HlOpcodeKind.New:
+            case HlOpcodeKind.New: {
+                var dst = instruction.Parameters[0];
+
+                var ctor = asmDef.MainModule.ImportReference(locals[dst].VariableType.Resolve().Methods.First(x => x.IsConstructor && x.Parameters.Count == 0));
+
+                il.Emit(OpCodes.Newobj, ctor);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // TODO: used
             case HlOpcodeKind.ArraySize:

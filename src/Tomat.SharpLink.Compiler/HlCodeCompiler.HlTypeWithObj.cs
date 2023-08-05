@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -92,15 +94,30 @@ partial class HlCodeCompiler {
         void reverseAddAllFields(HlType? theType, List<FieldDefinition> fieldFields) {
             if (theType is not HlTypeWithObj theTypeObj)
                 return;
-            
+
             reverseAddAllFields(theTypeObj.Obj.Super?.Value ?? null, fieldFields);
-            
+
             var fieldDefsForTheType = objFieldDefs[theTypeObj];
             foreach (var field in theTypeObj.Obj.Fields)
                 fieldFields.Add(fieldDefsForTheType[field]);
         }
-        
+
         var allFields = objTypeDefFields[objDef] = new List<FieldDefinition>();
         reverseAddAllFields(type, allFields);
+
+        var ctorDef = new MethodDefinition(
+            ".ctor",
+            MethodAttributes.Public
+          | MethodAttributes.HideBySig
+          | MethodAttributes.SpecialName
+          | MethodAttributes.RTSpecialName,
+            asmDef.MainModule.TypeSystem.Void
+        );
+        objDef.Methods.Add(ctorDef);
+
+        var ctorIl = ctorDef.Body.GetILProcessor();
+        ctorIl.Emit(OpCodes.Ldarg_0);
+        ctorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(objDef.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
+        ctorIl.Emit(OpCodes.Ret);
     }
 }

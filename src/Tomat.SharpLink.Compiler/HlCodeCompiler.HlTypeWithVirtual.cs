@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -64,6 +65,7 @@ partial class HlCodeCompiler {
         var virtParams = virtParamDefs[type];
 
         var allFields = objTypeDefFields[virtDef] = new List<FieldDefinition>();
+
         for (var i = 0; i < type.Virtual.Fields.Length; i++) {
             var fieldDef = virtFields[i];
             virtDef.Fields.Add(fieldDef);
@@ -78,5 +80,20 @@ partial class HlCodeCompiler {
         }
 
         ctorDefIl.Emit(OpCodes.Ret);
+
+        var emptyCtorDef = new MethodDefinition(
+            ".ctor",
+            MethodAttributes.Public
+          | MethodAttributes.HideBySig
+          | MethodAttributes.SpecialName
+          | MethodAttributes.RTSpecialName,
+            asmDef.MainModule.TypeSystem.Void
+        );
+        virtDef.Methods.Add(emptyCtorDef);
+
+        var ctorIl = emptyCtorDef.Body.GetILProcessor();
+        ctorIl.Emit(OpCodes.Ldarg_0);
+        ctorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(virtDef.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
+        ctorIl.Emit(OpCodes.Ret);
     }
 }
