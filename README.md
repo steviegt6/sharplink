@@ -21,7 +21,7 @@ Long-term goals:
 - [ ] transpile a "Hello, world!" app,
 - [ ] rewrite compiler to produce more .NET-like IL (define methods instead of delegate fields, etc.).
 
-Opcode implementation status (56/99, ~56%):
+Opcode implementation status (61/99, ~61%):
 
 | Opcode Name     | ⚪[^1] |
 | --------------- | ------ |
@@ -67,8 +67,8 @@ Opcode implementation status (56/99, ~56%):
 | SetField        | 🟡     |
 | GetThis         | 🟡     |
 | SetThis         | 🟡     |
-| DynGet          | 🔴     |
-| DynSet          | 🔴     |
+| DynGet          | 🟡     |
+| DynSet          | 🟡     |
 | JTrue           | 🟢     |
 | JFalse          | 🟢     |
 | JNull           | 🟢     |

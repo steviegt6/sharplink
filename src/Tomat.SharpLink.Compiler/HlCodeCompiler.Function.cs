@@ -714,13 +714,37 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
-            case HlOpcodeKind.DynGet:
-                break;
+            case HlOpcodeKind.DynGet: {
+                var dst = instruction.Parameters[0];
+                var obj = instruction.Parameters[1];
+                var field = instruction.Parameters[2];
 
-            // TODO: I haven't encountered this being used yet.
-            case HlOpcodeKind.DynSet:
-                throw new NotImplementedException();
+                var fieldName = hash.Code.Strings[field];
+
+                // Call HaxeDyn::GetField(fieldName)
+                LoadLocal(il, locals, obj);
+                il.Emit(OpCodes.Ldstr, fieldName);
+                il.Emit(OpCodes.Callvirt, asmDef.MainModule.ImportReference(typeof(HaxeDyn).GetMethod("GetField", new[] { typeof(string) })));
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            // TODO: I haven't encountered this being used yet, make sure it
+            // works.
+            case HlOpcodeKind.DynSet: {
+                var obj = instruction.Parameters[0];
+                var field = instruction.Parameters[1];
+                var src = instruction.Parameters[2];
+
+                var fieldName = hash.Code.Strings[field];
+
+                // Call HaxeDyn::SetField(fieldName, src)
+                LoadLocal(il, locals, obj);
+                il.Emit(OpCodes.Ldstr, fieldName);
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Callvirt, asmDef.MainModule.ImportReference(typeof(HaxeDyn).GetMethod("SetField", new[] { typeof(string), typeof(object) })));
+                break;
+            }
 
             // Jump to offset if true.
             case HlOpcodeKind.JTrue: {
