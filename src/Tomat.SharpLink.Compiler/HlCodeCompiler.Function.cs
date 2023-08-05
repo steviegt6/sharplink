@@ -671,17 +671,48 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
-            case HlOpcodeKind.SetField:
-                break;
+            case HlOpcodeKind.SetField: {
+                var obj = instruction.Parameters[0];
+                var field = instruction.Parameters[1];
+                var src = instruction.Parameters[2];
 
-            // TODO: used
-            case HlOpcodeKind.GetThis:
-                break;
+                var varDef = locals[obj];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefFields[varTypeDef][field];
 
-            // TODO: used
-            case HlOpcodeKind.SetThis:
+                LoadLocal(il, locals, obj);
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Stfld, fieldDef);
                 break;
+            }
+
+            case HlOpcodeKind.GetThis: {
+                var dst = instruction.Parameters[0];
+                var field = instruction.Parameters[1];
+
+                var varDef = locals[0];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefFields[varTypeDef][field];
+
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, fieldDef);
+                SetLocal(il, locals, dst);
+                break;
+            }
+
+            case HlOpcodeKind.SetThis: {
+                var field = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                var varDef = locals[0];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefFields[varTypeDef][field];
+
+                il.Emit(OpCodes.Ldarg_0);
+                LoadLocal(il, locals, src);
+                il.Emit(OpCodes.Stfld, fieldDef);
+                break;
+            }
 
             // TODO: used
             case HlOpcodeKind.DynGet:

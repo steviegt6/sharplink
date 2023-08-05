@@ -64,9 +64,9 @@ Opcode implementation status (56/99, ~56%):
 | GetGlobal       | 🟢     |
 | SetGlobal       | 🟢     |
 | Field           | 🟡     |
-| SetField        | 🔴     |
-| GetThis         | 🔴     |
-| SetThis         | 🔴     |
+| SetField        | 🟡     |
+| GetThis         | 🟡     |
+| SetThis         | 🟡     |
 | DynGet          | 🔴     |
 | DynSet          | 🔴     |
 | JTrue           | 🟢     |
