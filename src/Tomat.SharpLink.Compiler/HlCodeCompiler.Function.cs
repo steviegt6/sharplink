@@ -602,7 +602,6 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
             case HlOpcodeKind.CallThis: {
                 var dst = instruction.Parameters[0];
                 var field = instruction.Parameters[1];
@@ -633,6 +632,7 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.InstanceClosure:
                 break;
 
+            // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.VirtualClosure:
                 throw new NotImplementedException();
 
@@ -656,9 +656,20 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            // TODO: used
-            case HlOpcodeKind.Field:
+            case HlOpcodeKind.Field: {
+                var dst = instruction.Parameters[0];
+                var obj = instruction.Parameters[1];
+                var field = instruction.Parameters[2];
+
+                var varDef = locals[obj];
+                var varTypeDef = varDef.VariableType.Resolve();
+                var fieldDef = objTypeDefFields[varTypeDef][field];
+
+                LoadLocal(il, locals, obj);
+                il.Emit(OpCodes.Ldfld, fieldDef);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             // TODO: used
             case HlOpcodeKind.SetField:

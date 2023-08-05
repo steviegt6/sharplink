@@ -21,7 +21,7 @@ Long-term goals:
 - [ ] transpile a "Hello, world!" app,
 - [ ] rewrite compiler to produce more .NET-like IL (define methods instead of delegate fields, etc.).
 
-Opcode implementation status (55/99, ~55%):
+Opcode implementation status (56/99, ~56%):
 
 | Opcode Name     | ⚪[^1] |
 | --------------- | ------ |
@@ -63,7 +63,7 @@ Opcode implementation status (55/99, ~55%):
 | VirtualClosure  | 🔴     |
 | GetGlobal       | 🟢     |
 | SetGlobal       | 🟢     |
-| Field           | 🔴     |
+| Field           | 🟡     |
 | SetField        | 🔴     |
 | GetThis         | 🔴     |
 | SetThis         | 🔴     |

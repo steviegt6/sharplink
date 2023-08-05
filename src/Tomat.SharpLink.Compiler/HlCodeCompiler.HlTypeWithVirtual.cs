@@ -63,9 +63,11 @@ partial class HlCodeCompiler {
         var virtFields = virtFieldDefs[type];
         var virtParams = virtParamDefs[type];
 
+        var allFields = objTypeDefFields[virtDef] = new List<FieldDefinition>();
         for (var i = 0; i < type.Virtual.Fields.Length; i++) {
             var fieldDef = virtFields[i];
             virtDef.Fields.Add(fieldDef);
+            allFields.Add(fieldDef);
 
             var paramDef = virtParams[i];
             ctorDef.Parameters.Add(paramDef);

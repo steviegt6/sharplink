@@ -1,13 +1,16 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Runtime.CompilerServices;
 
 namespace Tomat.SharpLink;
 
-// Glorified StrongBox<T>, lol.
-public class HaxeRef<T> {
-    [MaybeNull]
-    public T Value;
+public class HaxeRef<T> : IStrongBox {
+    public T? Value;
 
     public HaxeRef(T value) {
         Value = value;
+    }
+
+    object? IStrongBox.Value {
+        get => Value;
+        set => Value = (T?)value;
     }
 }
