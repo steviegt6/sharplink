@@ -147,7 +147,7 @@ partial class HlCodeCompiler {
         for (var i = 0; i < fun.Opcodes.Length; i++) {
             var instr = fun.Opcodes[i];
             il.Append(markers[i]);
-            GenerateInstruction(instr, locals, il, asmDef, i, markers);
+            GenerateInstruction(instr, locals, il, asmDef, i, markers, method);
         }
     }
 
@@ -192,7 +192,7 @@ partial class HlCodeCompiler {
         return locals[index].VariableType;
     }
 
-    private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef, int originalIndex, Dictionary<int, Instruction> markers) {
+    private void GenerateInstruction(HlOpcode instruction, List<VariableDefinition> locals, ILProcessor il, AssemblyDefinition asmDef, int originalIndex, Dictionary<int, Instruction> markers, MethodDefinition method) {
         var originalIndexForJump = originalIndex + 1;
 
         if (markers.TryGetValue(originalIndex, out var marker))
@@ -970,8 +970,21 @@ partial class HlCodeCompiler {
             }
 
             // TODO: used
-            case HlOpcodeKind.ToDyn:
+            case HlOpcodeKind.ToDyn: {
+                var dst = instruction.Parameters[0];
+                var src = instruction.Parameters[1];
+
+                var haxeDynRef = asmDef.MainModule.ImportReference(typeof(HaxeDyn));
+                var haxeDynCtor = asmDef.MainModule.ImportReference(haxeDynRef.Resolve().Methods.First(m => m.IsConstructor && m.Parameters.Count == 1));
+                var varType = locals[src].VariableType.Resolve();
+
+                LoadLocal(il, locals, src);
+                if (varType.IsValueType)
+                    il.Emit(OpCodes.Box, asmDef.MainModule.ImportReference(varType));
+                il.Emit(OpCodes.Newobj, haxeDynCtor);
+                SetLocal(il, locals, dst);
                 break;
+            }
 
             case HlOpcodeKind.ToSFloat: {
                 var dst = instruction.Parameters[0];
@@ -1039,7 +1052,21 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.Ret: {
                 var localIndex = instruction.Parameters[0];
 
-                il.Emit(OpCodes.Ldloc, locals[localIndex]);
+                var varType = locals[localIndex].VariableType.Resolve();
+                var retType = method.ReturnType.Resolve();
+
+                if (retType.FullName == "Tomat.SharpLink.HaxeDyn" && varType.FullName != "Tomat.SharpLink.HaxDyn") {
+                    il.Emit(OpCodes.Ldloc, locals[localIndex]);
+
+                    if (varType.IsValueType)
+                        il.Emit(OpCodes.Box, asmDef.MainModule.ImportReference(varType));
+
+                    il.Emit(OpCodes.Newobj, asmDef.MainModule.ImportReference(typeof(HaxeDyn).GetConstructor(new[] { typeof(object) })));
+                }
+                else {
+                    il.Emit(OpCodes.Ldloc, locals[localIndex]);
+                }
+
                 il.Emit(OpCodes.Ret);
                 break;
             }
