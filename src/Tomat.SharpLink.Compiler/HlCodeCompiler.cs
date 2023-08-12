@@ -11,7 +11,9 @@ public partial class HlCodeCompiler {
     private readonly HlCodeHash hash;
 
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
+
     // private int anonymousDelegateCounter = 0;
+    private Dictionary<TypeDefinition, List<FieldDefinition>> compiledAllFields = new();
 
     public HlCodeCompiler(HlCodeHash hash) {
         this.hash = hash;
@@ -62,8 +64,8 @@ public partial class HlCodeCompiler {
                 throw new InvalidOperationException($"Encountered global with missing value.");
 
             var type = value switch {
-                HlTypeWithObj obj => objDefs[obj],
-                HlTypeWithEnum @enum => enumDefs[@enum],
+                HlTypeWithObj obj => compiledObjs[obj].Type,
+                HlTypeWithEnum @enum => compiledEnums[@enum].Type,
                 HlTypeWithAbsName _ => asmDef.MainModule.TypeSystem.IntPtr,
                 _ => throw new InvalidOperationException($"Encountered global with unknown type {value.GetType().Name}.")
             };
@@ -260,10 +262,10 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeDyn));
 
             case HlTypeKind.Fun:
-                return funDefs[(HlTypeWithFun)type];
+                return compiledFuns[(HlTypeWithFun)type].Type;
 
             case HlTypeKind.Obj:
-                return objDefs[(HlTypeWithObj)type];
+                return compiledObjs[(HlTypeWithObj)type].Type;
 
             case HlTypeKind.Array:
                 return asmDef.MainModule.ImportReference(typeof(HaxeArray));
@@ -275,7 +277,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
             case HlTypeKind.Virtual:
-                return virtDefs[(HlTypeWithVirtual)type];
+                return compiledVirtuals[(HlTypeWithVirtual)type].Type;
 
             case HlTypeKind.DynObj:
                 throw new NotImplementedException();
@@ -285,7 +287,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.TypeSystem.IntPtr;
 
             case HlTypeKind.Enum:
-                return enumDefs[(HlTypeWithEnum)type];
+                return compiledEnums[(HlTypeWithEnum)type].Type;
 
             case HlTypeKind.Null:
                 return asmDef.MainModule.ImportReference(typeof(HaxeNull<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));

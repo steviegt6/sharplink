@@ -5,12 +5,37 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private Dictionary<HlTypeWithEnum, TypeDefinition> enumDefs = new();
-    private Dictionary<HlTypeWithEnum, MethodDefinition> enumBaseCtorDefs = new();
-    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, TypeDefinition>> enumConstructDefs = new();
-    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, MethodDefinition>> enumConstructCtorDefs = new();
-    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, List<FieldDefinition>>> enumConstructFieldDefs = new();
-    private Dictionary<HlTypeWithEnum, Dictionary<HlEnumConstruct, List<ParameterDefinition>>> enumConstructCtorParamDefs = new();
+    public class CompiledEnum {
+        public TypeDefinition Type { get; }
+
+        public MethodDefinition BaseConstructor { get; set; } = null!;
+
+        public Dictionary<HlEnumConstruct, CompiledEnumConstruct> Constructs { get; set; } = new();
+
+        public CompiledEnum(TypeDefinition type) {
+            Type = type;
+        }
+    }
+
+    public class CompiledEnumConstruct {
+        public TypeDefinition Type { get; }
+
+        public MethodDefinition Constructor { get; set; } = null!;
+
+        public List<FieldDefinition> Fields { get; set; } = new();
+
+        public List<ParameterDefinition> ConstructorParameters { get; set; } = new();
+
+        public CompiledEnumConstruct(TypeDefinition type) {
+            Type = type;
+        }
+    }
+
+    private Dictionary<HlTypeWithEnum, CompiledEnum> compiledEnums = new();
+
+    private CompiledEnum GetCompiledEnum(HlTypeWithEnum type) {
+        return compiledEnums[type];
+    }
 
     private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Enum.Name, out var enumNs, out var enumName);
@@ -22,11 +47,11 @@ partial class HlCodeCompiler {
           | TypeAttributes.Abstract,
             asmDef.MainModule.TypeSystem.Object
         );
-        enumDefs.Add(type, enumDef);
+        compiledEnums.Add(type, new CompiledEnum(enumDef));
     }
 
     private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
-        var enumDef = enumDefs[type];
+        var compiled = compiledEnums[type];
 
         var enumBaseCtor = new MethodDefinition(
             ".ctor",
@@ -36,34 +61,27 @@ partial class HlCodeCompiler {
           | MethodAttributes.SpecialName,
             asmDef.MainModule.TypeSystem.Void
         );
-        enumBaseCtorDefs.Add(type, enumBaseCtor);
-        enumConstructDefs.Add(type, new Dictionary<HlEnumConstruct, TypeDefinition>());
-        enumConstructCtorDefs.Add(type, new Dictionary<HlEnumConstruct, MethodDefinition>());
-        enumConstructFieldDefs.Add(type, new Dictionary<HlEnumConstruct, List<FieldDefinition>>());
-        enumConstructCtorParamDefs.Add(type, new Dictionary<HlEnumConstruct, List<ParameterDefinition>>());
+        compiled.BaseConstructor = enumBaseCtor;
 
         foreach (var construct in type.Enum.Constructs) {
-            var nestedType = new TypeDefinition(
-                enumDef.Namespace ?? "",
-                construct.Name,
-                TypeAttributes.BeforeFieldInit
-              | TypeAttributes.NestedPublic,
-                enumDef
-            );
-            enumConstructDefs[type].Add(construct, nestedType);
-
-            var nestedCtor = new MethodDefinition(
-                ".ctor",
-                MethodAttributes.Public
-              | MethodAttributes.HideBySig
-              | MethodAttributes.RTSpecialName
-              | MethodAttributes.SpecialName,
-                asmDef.MainModule.TypeSystem.Void
-            );
-            enumConstructCtorDefs[type].Add(construct, nestedCtor);
-
-            var fieldDefs = enumConstructFieldDefs[type][construct] = new List<FieldDefinition>();
-            var paramDefs = enumConstructCtorParamDefs[type][construct] = new List<ParameterDefinition>();
+            var compiledConstruct = new CompiledEnumConstruct(
+                new TypeDefinition(
+                    compiled.Type.Namespace ?? "",
+                    construct.Name,
+                    TypeAttributes.BeforeFieldInit
+                  | TypeAttributes.NestedPublic,
+                    compiled.Type
+                )
+            ) {
+                Constructor = new MethodDefinition(
+                    ".ctor",
+                    MethodAttributes.Public
+                  | MethodAttributes.HideBySig
+                  | MethodAttributes.RTSpecialName
+                  | MethodAttributes.SpecialName,
+                    asmDef.MainModule.TypeSystem.Void
+                ),
+            };
 
             var paramNumber = 0;
 
@@ -74,44 +92,42 @@ partial class HlCodeCompiler {
                     FieldAttributes.Public,
                     TypeReferenceFromHlTypeRef(param, asmDef)
                 );
-                fieldDefs.Add(fieldDef);
-
-                var paramDef = new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType);
-                paramDefs.Add(paramDef);
+                compiledConstruct.Fields.Add(fieldDef);
+                compiledConstruct.ConstructorParameters.Add(new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType));
 
                 paramNumber++;
             }
+
+            compiled.Constructs.Add(construct, compiledConstruct);
         }
     }
 
     private void CompileHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
-        var enumDef = enumDefs[type];
-        asmDef.MainModule.Types.Add(enumDef);
+        var compiled = compiledEnums[type];
+        asmDef.MainModule.Types.Add(compiled.Type);
 
-        var enumBaseCtor = enumBaseCtorDefs[type];
-        enumDef.Methods.Add(enumBaseCtor);
+        compiled.Type.Methods.Add(compiled.BaseConstructor);
 
-        var enumCtorIl = enumBaseCtor.Body.GetILProcessor();
+        var enumCtorIl = compiled.BaseConstructor.Body.GetILProcessor();
         enumCtorIl.Emit(OpCodes.Ldarg_0);
-        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(enumDef.BaseType)));
+        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(compiled.Type.BaseType)));
         enumCtorIl.Emit(OpCodes.Ret);
 
         foreach (var construct in type.Enum.Constructs) {
-            var nestedType = enumConstructDefs[type][construct];
-            enumDef.NestedTypes.Add(nestedType);
+            var compiledConstruct = compiled.Constructs[construct];
+            compiled.Type.NestedTypes.Add(compiledConstruct.Type);
 
-            var nestedCtor = enumConstructCtorDefs[type][construct];
-            nestedType.Methods.Add(nestedCtor);
-            var nestedCtorIl = nestedCtor.Body.GetILProcessor();
+            compiledConstruct.Type.Methods.Add(compiledConstruct.Constructor);
+            var nestedCtorIl = compiledConstruct.Constructor.Body.GetILProcessor();
             nestedCtorIl.Emit(OpCodes.Ldarg_0);
-            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(nestedType.BaseType)));
+            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(compiledConstruct.Type.BaseType)));
 
             for (var i = 0; i < construct.Params.Length; i++) {
-                var fieldDef = enumConstructFieldDefs[type][construct][i];
-                nestedType.Fields.Add(fieldDef);
+                var fieldDef = compiledConstruct.Fields[i];
+                compiled.Type.Fields.Add(fieldDef);
 
-                var paramDef = enumConstructCtorParamDefs[type][construct][i];
-                nestedCtor.Parameters.Add(paramDef);
+                var paramDef = compiledConstruct.ConstructorParameters[i];
+                compiledConstruct.Constructor.Parameters.Add(paramDef);
 
                 nestedCtorIl.Emit(OpCodes.Ldarg_0);
                 nestedCtorIl.Emit(OpCodes.Ldarg, paramDef);

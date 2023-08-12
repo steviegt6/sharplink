@@ -8,8 +8,16 @@ using Mono.Cecil.Rocks;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private Dictionary<HlFunction, MethodDefinition> funMethodDefs = new();
-    private Dictionary<HlNative, MethodDefinition> nativeMethodDefs = new();
+    public class CompiledFunction {
+        public MethodDefinition MethodDefinition { get; set; }
+
+        public CompiledFunction(MethodDefinition methodDefinition) {
+            MethodDefinition = methodDefinition;
+        }
+    }
+
+    private Dictionary<HlFunction, CompiledFunction> compiledFunctions = new();
+    private Dictionary<HlNative, CompiledFunction> compiledNativeFunctions = new();
 
     private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
@@ -18,12 +26,12 @@ partial class HlCodeCompiler {
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Name));
         method.CustomAttributes.Add(attr);
-        nativeMethodDefs.Add(native, method);
+        compiledNativeFunctions.Add(native, new CompiledFunction(method));
     }
 
     private void CompileNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
-        var method = nativeMethodDefs[native];
+        var method = compiledNativeFunctions[native].MethodDefinition;
 
         var body = method.Body = new MethodBody(method);
         var il = body.GetILProcessor();
@@ -70,12 +78,12 @@ partial class HlCodeCompiler {
     private void DefineFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
         var method = CreateMethod(fun, funType, asmDef);
-        funMethodDefs.Add(fun, method);
+        compiledFunctions.Add(fun, new CompiledFunction(method));
     }
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
-        var method = funMethodDefs[fun];
+        var method = compiledFunctions[fun].MethodDefinition;
         var locals = CreateMethodLocals(fun, funType, asmDef);
         GenerateMethodBody(method, locals, fun, asmDef);
 
@@ -509,7 +517,7 @@ partial class HlCodeCompiler {
                 var dst = instruction.Parameters[0];
                 var fun = instruction.Parameters[1];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
@@ -522,7 +530,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var arg = instruction.Parameters[2];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg, def.Parameters[0].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
@@ -537,7 +545,7 @@ partial class HlCodeCompiler {
                 var arg1 = instruction.Parameters[2];
                 var arg2 = instruction.Parameters[3];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -554,7 +562,7 @@ partial class HlCodeCompiler {
                 var arg2 = instruction.Parameters[3];
                 var arg3 = instruction.Parameters[4];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -573,7 +581,7 @@ partial class HlCodeCompiler {
                 var arg3 = instruction.Parameters[4];
                 var arg4 = instruction.Parameters[5];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -590,7 +598,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var args = instruction.Parameters[3..];
 
-                var def = ResolveDefinitionFromFIndex(fun);
+                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
 
                 for (var i = 0; i < args.Length; i++)
                     LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i].ParameterType, asmDef);
@@ -607,7 +615,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[args[0]];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefProtos[varTypeDef][field];
+                var fieldDef = GetAllProtos(varTypeDef)[field];
                 var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -626,7 +634,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefProtos[varTypeDef][field];
+                var fieldDef = GetAllProtos(varTypeDef)[field];
                 var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -730,7 +738,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[obj];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefFields[varTypeDef][field];
+                var fieldDef = GetAllFields(varTypeDef)[field];
 
                 LoadLocal(il, locals, obj);
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -745,7 +753,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[obj];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefFields[varTypeDef][field];
+                var fieldDef = GetAllFields(varTypeDef)[field];
 
                 LoadLocal(il, locals, obj);
                 LoadLocal(il, locals, src);
@@ -759,7 +767,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefFields[varTypeDef][field];
+                var fieldDef = GetAllFields(varTypeDef)[field];
 
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -773,7 +781,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = objTypeDefFields[varTypeDef][field];
+                var fieldDef = GetAllFields(varTypeDef)[field];
 
                 il.Emit(OpCodes.Ldarg_0);
                 LoadLocal(il, locals, src);
@@ -1268,10 +1276,10 @@ partial class HlCodeCompiler {
         }
     }
 
-    private MethodDefinition ResolveDefinitionFromFIndex(int fIndex) {
+    private CompiledFunction ResolveDefinitionFromFIndex(int fIndex) {
         var corrected = hash.FunctionIndexes[fIndex];
         return corrected >= hash.Code.Functions.Count
-            ? nativeMethodDefs[hash.Code.Natives[corrected - hash.Code.Functions.Count]]
-            : funMethodDefs[hash.Code.Functions[corrected]];
+            ? compiledNativeFunctions[hash.Code.Natives[corrected - hash.Code.Functions.Count]]
+            : compiledFunctions[hash.Code.Functions[corrected]];
     }
 }

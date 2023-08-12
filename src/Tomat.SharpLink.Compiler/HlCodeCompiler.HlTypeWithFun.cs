@@ -5,22 +5,34 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private Dictionary<HlTypeWithFun, TypeDefinition> funDefs = new();
+    public class CompiledFun {
+        public TypeDefinition Type { get; }
+
+        public CompiledFun(TypeDefinition type) {
+            Type = type;
+        }
+    }
+
+    private Dictionary<HlTypeWithFun, CompiledFun> compiledFuns = new();
+
+    private CompiledFun GetCompiledFun(HlTypeWithFun type) {
+        return compiledFuns[type];
+    }
 
     private void ResolveHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
         var funDelegateDef = CreateAnonymousDelegate(asmDef);
-        funDefs.Add(type, funDelegateDef);
+        compiledFuns.Add(type, new CompiledFun(funDelegateDef));
     }
 
     private void DefineHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
-        var funDelegateDef = funDefs[type];
+        var funDelegateDef = compiledFuns[type].Type;
         var retType = TypeReferenceFromHlTypeRef(type.FunctionDescription.ReturnType, asmDef);
         var paramTypes = type.FunctionDescription.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
         DefineAnonymousDelegate(funDelegateDef, retType, paramTypes, asmDef);
     }
 
     private void CompileHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
-        var funDelegateDef = funDefs[type];
+        var funDelegateDef = compiledFuns[type].Type;
         asmDef.MainModule.Types.Add(funDelegateDef);
     }
 }
