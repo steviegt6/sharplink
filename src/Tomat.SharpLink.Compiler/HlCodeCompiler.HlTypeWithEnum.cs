@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Tomat.SharpLink.Compiler.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private CompiledEnum GetCompiledEnum(HlTypeWithEnum type) {
-        return compiledEnums[type];
-    }
-
     private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Enum.Name, out var enumNs, out var enumName);
         var enumDef = new TypeDefinition(
@@ -19,11 +15,11 @@ partial class HlCodeCompiler {
           | TypeAttributes.Abstract,
             asmDef.MainModule.TypeSystem.Object
         );
-        compiledEnums.Add(type, new CompiledEnum(enumDef));
+        compilation.AddEnum(type, new CompiledEnum(enumDef));
     }
 
     private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
-        var compiled = compiledEnums[type];
+        var compiled = compilation.GetEnum(type);
 
         var enumBaseCtor = new MethodDefinition(
             ".ctor",
@@ -75,14 +71,14 @@ partial class HlCodeCompiler {
     }
 
     private void CompileHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
-        var compiled = compiledEnums[type];
+        var compiled = compilation.GetEnum(type);
         asmDef.MainModule.Types.Add(compiled.Type);
 
         compiled.Type.Methods.Add(compiled.BaseConstructor);
 
         var enumCtorIl = compiled.BaseConstructor.Body.GetILProcessor();
         enumCtorIl.Emit(OpCodes.Ldarg_0);
-        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(compiled.Type.BaseType)));
+        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiled.Type.BaseType.GetDefaultCtor()));
         enumCtorIl.Emit(OpCodes.Ret);
 
         foreach (var construct in type.Enum.Constructs) {
@@ -92,7 +88,7 @@ partial class HlCodeCompiler {
             compiledConstruct.Type.Methods.Add(compiledConstruct.Constructor);
             var nestedCtorIl = compiledConstruct.Constructor.Body.GetILProcessor();
             nestedCtorIl.Emit(OpCodes.Ldarg_0);
-            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(CecilUtils.DefaultCtorFor(compiledConstruct.Type.BaseType)));
+            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiledConstruct.Type.BaseType.GetDefaultCtor()));
 
             for (var i = 0; i < construct.Params.Length; i++) {
                 var fieldDef = compiledConstruct.Fields[i];

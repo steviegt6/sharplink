@@ -6,10 +6,6 @@ using Mono.Cecil.Rocks;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private CompiledAbstract GetCompiledAbstract(HlTypeWithAbsName type) {
-        return compiledAbstracts[type];
-    }
-
     private void InitializeAbsNameGlobals() {
         foreach (var absName in hash.Code.Globals.Select(x => x.Value).Where(x => x is HlTypeWithAbsName).Cast<HlTypeWithAbsName>())
             absNameGlobals.Add(absName, new List<int>());
@@ -24,11 +20,11 @@ partial class HlCodeCompiler {
 
     private void ResolveHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
         var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string), typeof(int[]) })));
-        compiledAbstracts.Add(type, new CompiledAbstract(attr));
+        compilation.AddAbstract(type, new CompiledAbstract(attr));
     }
 
     private void DefineHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
-        var compiled = compiledAbstracts[type];
+        var compiled = compilation.GetAbstract(type);
         var attr = compiled.Attribute;
 
         // (string name, int[] globals)
@@ -46,6 +42,6 @@ partial class HlCodeCompiler {
     }
 
     private void CompileHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
-        asmDef.CustomAttributes.Add(compiledAbstracts[type].Attribute);
+        asmDef.CustomAttributes.Add(compilation.GetAbstract(type).Attribute);
     }
 }

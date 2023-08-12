@@ -4,6 +4,7 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Tomat.SharpLink.Compiler.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -15,12 +16,12 @@ partial class HlCodeCompiler {
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Name));
         method.CustomAttributes.Add(attr);
-        compiledNativeFunctions.Add(native, new CompiledFunction(method));
+        compilation.AddNative(native, new CompiledFunction(method));
     }
 
     private void CompileNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
-        var method = compiledNativeFunctions[native].MethodDefinition;
+        var method = compilation.GetNative(native).MethodDefinition;
 
         var body = method.Body = new MethodBody(method);
         var il = body.GetILProcessor();
@@ -67,12 +68,12 @@ partial class HlCodeCompiler {
     private void DefineFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
         var method = CreateMethod(fun, funType, asmDef);
-        compiledFunctions.Add(fun, new CompiledFunction(method));
+        compilation.AddFunction(fun, new CompiledFunction(method));
     }
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
-        var method = compiledFunctions[fun].MethodDefinition;
+        var method = compilation.GetFunction(fun).MethodDefinition;
         var locals = CreateMethodLocals(fun, funType, asmDef);
         GenerateMethodBody(method, locals, fun, asmDef);
 
@@ -604,7 +605,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[args[0]];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllProtos(varTypeDef)[field];
+                var fieldDef = compilation.GetAllProtosFor(varTypeDef)[field];
                 var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -623,7 +624,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllProtos(varTypeDef)[field];
+                var fieldDef = compilation.GetAllProtosFor(varTypeDef)[field];
                 var def = fieldDef.FieldType.Resolve().Methods.First(m => m.Name == "Invoke");
 
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -727,7 +728,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[obj];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllFields(varTypeDef)[field];
+                var fieldDef = compilation.GetAllFieldsFor(varTypeDef)[field];
 
                 LoadLocal(il, locals, obj);
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -742,7 +743,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[obj];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllFields(varTypeDef)[field];
+                var fieldDef = compilation.GetAllFieldsFor(varTypeDef)[field];
 
                 LoadLocal(il, locals, obj);
                 LoadLocal(il, locals, src);
@@ -756,7 +757,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllFields(varTypeDef)[field];
+                var fieldDef = compilation.GetAllFieldsFor(varTypeDef)[field];
 
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldfld, fieldDef);
@@ -770,7 +771,7 @@ partial class HlCodeCompiler {
 
                 var varDef = locals[0];
                 var varTypeDef = varDef.VariableType.Resolve();
-                var fieldDef = GetAllFields(varTypeDef)[field];
+                var fieldDef = compilation.GetAllFieldsFor(varTypeDef)[field];
 
                 il.Emit(OpCodes.Ldarg_0);
                 LoadLocal(il, locals, src);
@@ -1268,7 +1269,7 @@ partial class HlCodeCompiler {
     private CompiledFunction ResolveDefinitionFromFIndex(int fIndex) {
         var corrected = hash.FunctionIndexes[fIndex];
         return corrected >= hash.Code.Functions.Count
-            ? compiledNativeFunctions[hash.Code.Natives[corrected - hash.Code.Functions.Count]]
-            : compiledFunctions[hash.Code.Functions[corrected]];
+            ? compilation.GetNative(hash.Code.Natives[corrected - hash.Code.Functions.Count])
+            : compilation.GetFunction(hash.Code.Functions[corrected]);
     }
 }

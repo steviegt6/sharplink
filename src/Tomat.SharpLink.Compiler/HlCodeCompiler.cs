@@ -7,108 +7,12 @@ using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 
-public class CompiledFunction {
-    public MethodDefinition MethodDefinition { get; set; }
-
-    public CompiledFunction(MethodDefinition methodDefinition) {
-        MethodDefinition = methodDefinition;
-    }
-}
-
-public class CompiledAbstract {
-    public List<int> Globals { get; set; } = new();
-
-    public CustomAttribute Attribute { get; }
-
-    public CompiledAbstract(CustomAttribute attribute) {
-        Attribute = attribute;
-    }
-}
-
-public class CompiledEnum {
-    public TypeDefinition Type { get; }
-
-    public MethodDefinition BaseConstructor { get; set; } = null!;
-
-    public Dictionary<HlEnumConstruct, CompiledEnumConstruct> Constructs { get; set; } = new();
-
-    public CompiledEnum(TypeDefinition type) {
-        Type = type;
-    }
-}
-
-public class CompiledEnumConstruct {
-    public TypeDefinition Type { get; }
-
-    public MethodDefinition Constructor { get; set; } = null!;
-
-    public List<FieldDefinition> Fields { get; set; } = new();
-
-    public List<ParameterDefinition> ConstructorParameters { get; set; } = new();
-
-    public CompiledEnumConstruct(TypeDefinition type) {
-        Type = type;
-    }
-}
-
-public class CompiledFun {
-    public TypeDefinition Type { get; }
-
-    public CompiledFun(TypeDefinition type) {
-        Type = type;
-    }
-}
-
-public class CompiledObj {
-    public TypeDefinition Type { get; }
-
-    public Dictionary<HlObjField, FieldDefinition> Fields { get; set; }
-
-    public Dictionary<HlObjProto, FieldDefinition> Protos { get; set; }
-
-    public List<FieldDefinition> AllFields { get; set; } = new();
-
-    public List<FieldDefinition> AllProtos { get; set; } = new();
-
-    public CompiledObj(TypeDefinition type, Dictionary<HlObjField, FieldDefinition> fields, Dictionary<HlObjProto, FieldDefinition> protos) {
-        Type = type;
-        Fields = fields;
-        Protos = protos;
-    }
-}
-
-public class CompiledVirtual {
-    public TypeDefinition Type { get; }
-
-    public MethodDefinition BaseConstructor { get; set; }
-
-    public List<FieldDefinition> Fields { get; set; } = new();
-
-    public List<ParameterDefinition> ConstructorParameters { get; set; } = new();
-
-    public List<FieldDefinition> AllFields { get; set; } = new();
-
-    public CompiledVirtual(TypeDefinition type, MethodDefinition baseConstructor) {
-        Type = type;
-        BaseConstructor = baseConstructor;
-    }
-}
-
 public partial class HlCodeCompiler {
     private readonly HlCodeHash hash;
-
+    private readonly Compilation compilation = new();
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
 
-    private Dictionary<HlFunction, CompiledFunction> compiledFunctions = new();
-    private Dictionary<HlNative, CompiledFunction> compiledNativeFunctions = new();
-    private Dictionary<HlTypeWithAbsName, CompiledAbstract> compiledAbstracts = new();
     private Dictionary<HlTypeWithAbsName, List<int>> absNameGlobals = new();
-    private Dictionary<HlTypeWithEnum, CompiledEnum> compiledEnums = new();
-    private Dictionary<HlTypeWithFun, CompiledFun> compiledFuns = new();
-    private Dictionary<HlTypeWithObj, CompiledObj> compiledObjs = new();
-    private Dictionary<TypeDefinition, CompiledObj> compiledObjsByType = new();
-    private Dictionary<TypeDefinition, CompiledVirtual> compiledVirtualsByType = new();
-    private Dictionary<HlTypeWithVirtual, CompiledVirtual> compiledVirtuals = new();
 
     public HlCodeCompiler(HlCodeHash hash) {
         this.hash = hash;
@@ -159,8 +63,8 @@ public partial class HlCodeCompiler {
                 throw new InvalidOperationException($"Encountered global with missing value.");
 
             var type = value switch {
-                HlTypeWithObj obj => compiledObjs[obj].Type,
-                HlTypeWithEnum @enum => compiledEnums[@enum].Type,
+                HlTypeWithObj obj => compilation.GetObj(obj).Type,
+                HlTypeWithEnum @enum => compilation.GetEnum(@enum).Type,
                 HlTypeWithAbsName _ => asmDef.MainModule.TypeSystem.IntPtr,
                 _ => throw new InvalidOperationException($"Encountered global with unknown type {value.GetType().Name}.")
             };
@@ -301,20 +205,7 @@ public partial class HlCodeCompiler {
             throw new ArgumentOutOfRangeException(nameof(hlType), $"Unexpected HlType: '{hlType.GetType().FullName}'.");
     }
 
-#if DEBUG
     private TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
-        try {
-            return _TypeReferenceFromHlTypeRef(typeRef, asmDef);
-        }
-        catch {
-            return asmDef.MainModule.TypeSystem.Object;
-        }
-    }
-
-    private TypeReference _TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
-#else
-    private TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
-#endif
         if (typeRef.Value is not { } type)
             throw new ArgumentException("Type reference was null.", nameof(typeRef));
 
@@ -357,10 +248,10 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeDyn));
 
             case HlTypeKind.Fun:
-                return compiledFuns[(HlTypeWithFun)type].Type;
+                return compilation.GetFun((HlTypeWithFun)type).Type;
 
             case HlTypeKind.Obj:
-                return compiledObjs[(HlTypeWithObj)type].Type;
+                return compilation.GetObj((HlTypeWithObj)type).Type;
 
             case HlTypeKind.Array:
                 return asmDef.MainModule.ImportReference(typeof(HaxeArray));
@@ -372,7 +263,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
             case HlTypeKind.Virtual:
-                return compiledVirtuals[(HlTypeWithVirtual)type].Type;
+                return compilation.GetVirtual((HlTypeWithVirtual)type).Type;
 
             case HlTypeKind.DynObj:
                 throw new NotImplementedException();
@@ -382,7 +273,7 @@ public partial class HlCodeCompiler {
                 return asmDef.MainModule.TypeSystem.IntPtr;
 
             case HlTypeKind.Enum:
-                return compiledEnums[(HlTypeWithEnum)type].Type;
+                return compilation.GetEnum((HlTypeWithEnum)type).Type;
 
             case HlTypeKind.Null:
                 return asmDef.MainModule.ImportReference(typeof(HaxeNull<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));

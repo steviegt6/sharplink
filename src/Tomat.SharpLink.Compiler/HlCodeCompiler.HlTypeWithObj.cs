@@ -6,48 +6,6 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private CompiledObj GetCompiledObj(HlTypeWithObj type) {
-        return compiledObjs[type];
-    }
-
-    private List<FieldDefinition> GetAllFields(TypeDefinition type) {
-        if (compiledObjsByType.TryGetValue(type, out var compiledObj))
-            return compiledObj.AllFields;
-
-        compiledObj = compiledObjs.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledObj is not null) {
-            compiledObjsByType.Add(type, compiledObj);
-            return compiledObj.AllFields;
-        }
-
-        if (compiledVirtualsByType.TryGetValue(type, out var compiledVirtual))
-            return compiledVirtual.AllFields;
-
-        compiledVirtual = compiledVirtuals.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledVirtual is not null) {
-            compiledVirtualsByType.Add(type, compiledVirtual);
-            return compiledVirtual.AllFields;
-        }
-
-        throw new KeyNotFoundException($"Could not find compiled object or virtual for type {type.FullName}");
-    }
-
-    private List<FieldDefinition> GetAllProtos(TypeDefinition type) {
-        if (compiledObjsByType.TryGetValue(type, out var compiledObj))
-            return compiledObj.AllProtos;
-
-        compiledObj = compiledObjs.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledObj is not null) {
-            compiledObjsByType.Add(type, compiledObj);
-            return compiledObj.AllProtos;
-        }
-
-        throw new KeyNotFoundException($"Could not find compiled object for type {type.FullName}");
-    }
-
     private void ResolveHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Obj.Name, out var ns, out var name);
         var objDef = new TypeDefinition(
@@ -83,11 +41,11 @@ partial class HlCodeCompiler {
             protoDefs.Add(proto, protoDef);
         }
 
-        compiledObjs.Add(type, new CompiledObj(objDef, fieldDefs, protoDefs));
+        compilation.AddObj(type, new CompiledObj(objDef, fieldDefs, protoDefs));
     }
 
     private void DefineHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
-        var compiled = compiledObjs[type];
+        var compiled = compilation.GetObj(type);
         var objDef = compiled.Type;
         objDef.BaseType = type.Obj.Super is null ? asmDef.MainModule.TypeSystem.Object : TypeReferenceFromHlTypeRef(type.Obj.Super, asmDef);
 
@@ -98,12 +56,12 @@ partial class HlCodeCompiler {
 
         foreach (var proto in type.Obj.Protos) {
             var protoDef = compiled.Protos[proto];
-            protoDef.FieldType = compiledFuns[(HlTypeWithFun)hash.Code.Functions[hash.FunctionIndexes[proto.FIndex]].Type.Value!].Type;
+            protoDef.FieldType = compilation.GetFun((HlTypeWithFun)hash.Code.Functions[hash.FunctionIndexes[proto.FIndex]].Type.Value!).Type;
         }
     }
 
     private void CompileHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
-        var compiled = compiledObjs[type];
+        var compiled = compilation.GetObj(type);
         var objDef = compiled.Type;
         asmDef.MainModule.Types.Add(objDef);
 
@@ -121,7 +79,7 @@ partial class HlCodeCompiler {
 
             reverseAddAllProtos(theTypeObj.Obj.Super?.Value ?? null, protoFields);
 
-            var protoDefsForTheType = compiledObjs[theTypeObj].Protos;
+            var protoDefsForTheType = compilation.GetObj(theTypeObj).Protos;
             foreach (var proto in theTypeObj.Obj.Protos)
                 protoFields.Add(protoDefsForTheType[proto]);
         }
@@ -135,7 +93,7 @@ partial class HlCodeCompiler {
 
             reverseAddAllFields(theTypeObj.Obj.Super?.Value ?? null, fieldFields);
 
-            var fieldDefsForTheType = compiledObjs[theTypeObj].Fields;
+            var fieldDefsForTheType = compilation.GetObj(theTypeObj).Fields;
             foreach (var field in theTypeObj.Obj.Fields)
                 fieldFields.Add(fieldDefsForTheType[field]);
         }

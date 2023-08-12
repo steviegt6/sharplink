@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private CompiledVirtual GetCompiledVirtual(HlTypeWithVirtual type) {
-        return compiledVirtuals[type];
-    }
-
     private void ResolveHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
         var virtDef = CreateAnonymousType(
             "",
@@ -30,11 +25,11 @@ partial class HlCodeCompiler {
             asmDef.MainModule.TypeSystem.Void
         );
 
-        compiledVirtuals.Add(type, new CompiledVirtual(virtDef, ctorDef));
+        compilation.AddVirtual(type, new CompiledVirtual(virtDef, ctorDef));
     }
 
     private void DefineHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
-        var compiled = compiledVirtuals[type];
+        var compiled = compilation.GetVirtual(type);
         var virtFields = compiled.Fields;
         var virtParams = compiled.ConstructorParameters;
 
@@ -50,7 +45,7 @@ partial class HlCodeCompiler {
     }
 
     private void CompileHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
-        var compiled = compiledVirtuals[type];
+        var compiled = compilation.GetVirtual(type);
         var virtDef = compiled.Type;
         asmDef.MainModule.Types.Add(virtDef);
 
