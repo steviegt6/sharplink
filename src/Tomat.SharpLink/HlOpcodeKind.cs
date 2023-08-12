@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace Tomat.SharpLink;
 
+/// <summary>
+///     The kind of opcode.
+/// </summary>
 public enum HlOpcodeKind {
     Mov,
     Int,

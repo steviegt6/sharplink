@@ -111,8 +111,8 @@ public sealed class HlBinaryReader {
         var kind = (HlTypeKind)ReadByte();
 
         switch (kind) {
-            case HlTypeKind.HFUN:
-            case HlTypeKind.HMETHOD: {
+            case HlTypeKind.Fun:
+            case HlTypeKind.Method: {
                 var argumentCount = ReadByte();
                 var arguments = new HlTypeRef[argumentCount];
                 for (var i = 0; i < argumentCount; i++)
@@ -125,12 +125,12 @@ public sealed class HlBinaryReader {
 
                 return new HlTypeWithFun(
                     kind: kind,
-                    fun: fun
+                    functionDescription: fun
                 );
             }
 
-            case HlTypeKind.HOBJ:
-            case HlTypeKind.HSTRUCT: {
+            case HlTypeKind.Obj:
+            case HlTypeKind.Struct: {
                 var name = ReadUString();
                 var super = ReadIndex();
                 var global = ReadUIndex();
@@ -171,14 +171,14 @@ public sealed class HlBinaryReader {
                 return new HlTypeWithObj(kind, obj);
             }
 
-            case HlTypeKind.HREF: {
+            case HlTypeKind.Ref: {
                 return new HlTypeWithType(
                     kind: kind,
                     type: code.GetHlTypeRef(ReadIndex())
                 );
             }
 
-            case HlTypeKind.HVIRTUAL: {
+            case HlTypeKind.Virtual: {
                 var nFields = ReadUIndex();
                 var virt = new HlTypeVirtual(
                     fields: new HlObjField[nFields]
@@ -198,14 +198,14 @@ public sealed class HlBinaryReader {
                 );
             }
 
-            case HlTypeKind.HABSTRACT: {
+            case HlTypeKind.Abstract: {
                 return new HlTypeWithAbsName(
                     kind: kind,
-                    absName: ReadUString()
+                    abstractName: ReadUString()
                 );
             }
 
-            case HlTypeKind.HENUM: {
+            case HlTypeKind.Enum: {
                 var @enum = new HlTypeEnum(
                     name: ReadUString(),
                     globalValue: ReadUIndex(),
@@ -231,8 +231,8 @@ public sealed class HlBinaryReader {
                 );
             }
 
-            case HlTypeKind.HNULL:
-            case HlTypeKind.HPACKED: {
+            case HlTypeKind.Null:
+            case HlTypeKind.Packed: {
                 return new HlTypeWithType(
                     kind: kind,
                     type: code.GetHlTypeRef(ReadIndex())
@@ -240,7 +240,7 @@ public sealed class HlBinaryReader {
             }
 
             default: {
-                if (kind >= HlTypeKind.HLAST)
+                if (kind >= HlTypeKind.Last)
                     throw new InvalidDataException($"Invalid type kind: {kind}");
 
                 return new HlType(
@@ -262,9 +262,9 @@ public sealed class HlBinaryReader {
         for (var i = 0; i < nOps; i++)
             opcodes[i] = ReadHlOpcode();
         return new HlFunction(
-            fIndex: fIndex,
+            functionIndex: fIndex,
             type: type,
-            regs: regs,
+            localVariables: regs,
             opcodes: opcodes
         );
     }

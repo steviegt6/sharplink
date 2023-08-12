@@ -12,7 +12,7 @@ partial class HlCodeCompiler {
     private Dictionary<HlNative, MethodDefinition> nativeMethodDefs = new();
 
     private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
-        var funType = ((HlTypeWithFun)native.T.Value!).Fun;
+        var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
         var method = CreateMethod(native, funType, asmDef);
         var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkNativeImport).GetConstructor(new[] { typeof(string), typeof(string) })));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
@@ -22,7 +22,7 @@ partial class HlCodeCompiler {
     }
 
     private void CompileNative(HlNative native, AssemblyDefinition asmDef) {
-        var funType = ((HlTypeWithFun)native.T.Value!).Fun;
+        var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
         var method = nativeMethodDefs[native];
 
         var body = method.Body = new MethodBody(method);
@@ -68,13 +68,13 @@ partial class HlCodeCompiler {
     }
 
     private void DefineFunction(HlFunction fun, AssemblyDefinition asmDef) {
-        var funType = ((HlTypeWithFun)fun.Type.Value!).Fun;
+        var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
         var method = CreateMethod(fun, funType, asmDef);
         funMethodDefs.Add(fun, method);
     }
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
-        var funType = ((HlTypeWithFun)fun.Type.Value!).Fun;
+        var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
         var method = funMethodDefs[fun];
         var locals = CreateMethodLocals(fun, funType, asmDef);
         GenerateMethodBody(method, locals, fun, asmDef);
@@ -85,7 +85,7 @@ partial class HlCodeCompiler {
     private MethodDefinition CreateMethod(HlFunction fun, HlTypeFun funType, AssemblyDefinition asmDef) {
         var retType = TypeReferenceFromHlTypeRef(funType.ReturnType, asmDef);
         var paramTypes = funType.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
-        var method = new MethodDefinition($"fun{fun.FIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
+        var method = new MethodDefinition($"fun{fun.FunctionIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
 
         var argCounter = 0;
         foreach (var paramType in paramTypes)
@@ -96,7 +96,7 @@ partial class HlCodeCompiler {
     private MethodDefinition CreateMethod(HlNative native, HlTypeFun funType, AssemblyDefinition asmDef) {
         var retType = TypeReferenceFromHlTypeRef(funType.ReturnType, asmDef);
         var paramTypes = funType.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
-        var method = new MethodDefinition($"fun{native.FIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
+        var method = new MethodDefinition($"fun{native.NativeIndex}", MethodAttributes.Public | MethodAttributes.Static, retType);
 
         var argCounter = 0;
         foreach (var paramType in paramTypes)
@@ -117,7 +117,7 @@ partial class HlCodeCompiler {
         // TODO: When I have time to clean up and optimize code, make it so we
         // don't lazily assign parameters to locals and treat them all like
         // regular hl registers.
-        foreach (var local in fun.Regs) {
+        foreach (var local in fun.LocalVariables) {
             var localType = TypeReferenceFromHlTypeRef(local, asmDef);
             locals.Add(new VariableDefinition(localType));
         }
@@ -691,9 +691,13 @@ partial class HlCodeCompiler {
             case HlOpcodeKind.StaticClosure:
                 throw new NotImplementedException();
 
-            // TODO: used
-            case HlOpcodeKind.InstanceClosure:
+            case HlOpcodeKind.InstanceClosure: {
+                var dst = instruction.Parameters[0];
+                var fun = instruction.Parameters[1];
+                var obj = instruction.Parameters[2];
+
                 break;
+            }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.VirtualClosure:

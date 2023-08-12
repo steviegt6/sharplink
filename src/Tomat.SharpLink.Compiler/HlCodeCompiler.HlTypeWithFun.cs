@@ -14,8 +14,8 @@ partial class HlCodeCompiler {
 
     private void DefineHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
         var funDelegateDef = funDefs[type];
-        var retType = TypeReferenceFromHlTypeRef(type.Fun.ReturnType, asmDef);
-        var paramTypes = type.Fun.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
+        var retType = TypeReferenceFromHlTypeRef(type.FunctionDescription.ReturnType, asmDef);
+        var paramTypes = type.FunctionDescription.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
         DefineAnonymousDelegate(funDelegateDef, retType, paramTypes, asmDef);
     }
 

@@ -1,18 +1,33 @@
 ﻿namespace Tomat.SharpLink;
 
+/// <summary>
+///     A HashLink native function.
+/// </summary>
 public class HlNative {
+    /// <summary>
+    ///     The name of the library in which the native function is defined.
+    /// </summary>
     public string Lib { get; set; }
 
+    /// <summary>
+    ///     The name of the native function.
+    /// </summary>
     public string Name { get; set; }
 
-    public HlTypeRef T { get; set; }
+    /// <summary>
+    ///     A reference to the type definition which describes this function.
+    /// </summary>
+    public HlTypeRef Type { get; set; }
 
-    public int FIndex { get; set; }
+    /// <summary>
+    ///     The index of the native function in the HashLink binary.
+    /// </summary>
+    public int NativeIndex { get; set; }
 
-    public HlNative(string lib, string name, HlTypeRef t, int fIndex) {
+    public HlNative(string lib, string name, HlTypeRef t, int nativeIndex) {
         Lib = lib;
         Name = name;
-        T = t;
-        FIndex = fIndex;
+        Type = t;
+        NativeIndex = nativeIndex;
     }
 }

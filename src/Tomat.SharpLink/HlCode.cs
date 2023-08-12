@@ -6,44 +6,98 @@ using Tomat.SharpLink.IO;
 
 namespace Tomat.SharpLink;
 
+/// <summary>
+///     A HashLink bytecode binary file.
+/// </summary>
 public sealed class HlCode {
     private const int min_version = 2;
     private const int max_version = 5;
 
+    /// <summary>
+    ///     The binary file format version.
+    /// </summary>
     public int Version { get; set; }
 
+    /// <summary>
+    ///     The index of the entrypoint function.
+    /// </summary>
     public int Entrypoint { get; set; }
 
+    /// <summary>
+    ///     Whether this binary file contains debug information.
+    /// </summary>
     public bool HasDebug { get; set; }
 
+    /// <summary>
+    ///     The integer constants in this binary file.
+    /// </summary>
     public List<int> Ints { get; set; } = new();
 
+    /// <summary>
+    ///     The floating-point constants in this binary file.
+    /// </summary>
     public List<double> Floats { get; set; } = new();
 
+    /// <summary>
+    ///     The string constants in this binary file.
+    /// </summary>
     public List<string> Strings { get; set; } = new();
 
+    /// <summary>
+    ///     The lengths of the string constants in this binary file.
+    /// </summary>
     public List<int> StringLengths { get; set; } = new();
 
+    /// <summary>
+    ///     The byte constants in this binary file.
+    /// </summary>
     public List<byte> Bytes { get; set; } = new();
 
+    /// <summary>
+    ///     The positions of the byte constants in this binary file.
+    /// </summary>
     public List<int> BytePositions { get; set; } = new();
 
+    /// <summary>
+    ///     The names of debug files.
+    /// </summary>
     public List<string> DebugFiles { get; set; } = new();
 
+    /// <summary>
+    ///     The lengths of the names of debug files.
+    /// </summary>
     public List<int> DebugFileLengths { get; set; } = new();
 
-    // UStrings would be here ig
-
+    /// <summary>
+    ///     The types in this binary file.
+    /// </summary>
     public List<HlType> Types { get; set; } = new();
 
+    /// <summary>
+    ///     The global variables in this binary file.
+    /// </summary>
     public List<HlTypeRef> Globals { get; set; } = new();
 
+    /// <summary>
+    ///     The native functions in this binary file.
+    /// </summary>
     public List<HlNative> Natives { get; set; } = new();
 
+    /// <summary>
+    ///     The functions in this binary file.
+    /// </summary>
     public List<HlFunction> Functions { get; set; } = new();
 
+    /// <summary>
+    ///     The constants in this binary file.
+    /// </summary>
     public List<HlConstant> Constants { get; set; } = new();
 
+    /// <summary>
+    ///     Retrieves a wide string constant from this binary file.
+    /// </summary>
+    /// <param name="index">The index of the string constant.</param>
+    /// <returns>The wide string constant.</returns>
     public string GetUString(int index) {
         if (index < 0 || index >= Strings.Count) {
             Console.WriteLine("Invalid string index.");
@@ -55,6 +109,11 @@ public sealed class HlCode {
         return Strings[index];
     }
 
+    /// <summary>
+    ///     Retrieves a type from this binary file.
+    /// </summary>
+    /// <param name="index">The index of the type.</param>
+    /// <returns>The type.</returns>
     public HlType GetHlType(int index) {
         if (index < 0 || index >= Math.Max(Types.Count, Types.Capacity)) {
             Console.WriteLine("Invalid type index.");
@@ -64,6 +123,11 @@ public sealed class HlCode {
         return Types[index];
     }
 
+    /// <summary>
+    ///     Retrieves a reference to a type from this binary file.
+    /// </summary>
+    /// <param name="index">The index of the type.</param>
+    /// <returns>A reference to the type.</returns>
     public HlTypeRef GetHlTypeRef(int index) {
         if (index < 0 || index >= Math.Max(Types.Count, Types.Capacity)) {
             Console.WriteLine("Invalid type index.");
@@ -73,11 +137,21 @@ public sealed class HlCode {
         return new HlTypeRef(index, this);
     }
 
+    /// <summary>
+    ///     Creates a <see cref="HlCodeHash"/> instance, which contains
+    ///     additional information computed from this binary file.
+    /// </summary>
+    /// <returns>An instance of <see cref="HlCodeHash"/>.</returns>
     public HlCodeHash CreateCodeHash() {
         return new HlCodeHash(this);
     }
 
-    // TODO: Seek to beginning?
+    /// <summary>
+    ///     Creates an instance of <see cref="HlCode"/> from the
+    ///     <paramref name="stream"/>.
+    /// </summary>
+    /// <param name="stream">The stream to read from.</param>
+    /// <returns>An instance of <see cref="HlCode"/>.</returns>
     public static HlCode FromStream(Stream stream) {
         var bytes = new byte[stream.Length];
         var read = stream.Read(bytes, 0, bytes.Length);
@@ -87,6 +161,12 @@ public sealed class HlCode {
         return FromBytes(bytes);
     }
 
+    /// <summary>
+    ///     Creates an instance of <see cref="HlCode"/> from the
+    ///     <paramref name="data"/>.
+    /// </summary>
+    /// <param name="data">The data to read from.</param>
+    /// <returns>An instance of <see cref="HlCode"/>.</returns>
     public static HlCode FromBytes(byte[] data) {
         var code = new HlCode();
         var reader = new HlBinaryReader(data, code);
@@ -160,7 +240,7 @@ public sealed class HlCode {
                     lib: code.GetUString(reader.ReadIndex()),
                     name: code.GetUString(reader.ReadIndex()),
                     t: code.GetHlTypeRef(reader.ReadIndex()),
-                    fIndex: reader.ReadUIndex()
+                    nativeIndex: reader.ReadUIndex()
                 )
             );
         }
@@ -194,7 +274,7 @@ public sealed class HlCode {
             HlConstant constant;
             code.Constants.Add(
                 constant = new HlConstant(
-                    global: reader.ReadUIndex(),
+                    globalIndex: reader.ReadUIndex(),
                     fields: new int[reader.ReadUIndex()]
                 )
             );
@@ -207,9 +287,20 @@ public sealed class HlCode {
     }
 }
 
+/// <summary>
+///     A wrapper around <see cref="HlCode"/> which contains information
+///     computed from (but not contained in) the binary file.
+/// </summary>
 public class HlCodeHash {
+    /// <summary>
+    ///     The wrapped <see cref="HlCode"/>.
+    /// </summary>
     public HlCode Code { get; }
 
+    /// <summary>
+    ///     The unified function indexes, mapping both functions and natives to
+    ///     a single set.
+    /// </summary>
     public int[] FunctionIndexes { get; }
 
     public HlCodeHash(HlCode code) {
@@ -219,12 +310,12 @@ public class HlCodeHash {
 
         for (var i = 0; i < Code.Functions.Count; i++) {
             var func = Code.Functions[i];
-            FunctionIndexes[func.FIndex] = i;
+            FunctionIndexes[func.FunctionIndex] = i;
         }
 
         for (var i = 0; i < Code.Natives.Count; i++) {
             var native = Code.Natives[i];
-            FunctionIndexes[native.FIndex] = i + Code.Functions.Count;
+            FunctionIndexes[native.NativeIndex] = i + Code.Functions.Count;
         }
 
         // TODO: type hashes, global signs, etc.? idk if we need them

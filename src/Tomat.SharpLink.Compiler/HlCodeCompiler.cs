@@ -96,21 +96,21 @@ public partial class HlCodeCompiler {
 
     private void ResolveType(HlType hlType, AssemblyDefinition asmDef) {
         switch (hlType.Kind) {
-            case HlTypeKind.HVOID:
-            case HlTypeKind.HUI8:
-            case HlTypeKind.HUI16:
-            case HlTypeKind.HI32:
-            case HlTypeKind.HI64:
-            case HlTypeKind.HF32:
-            case HlTypeKind.HF64:
-            case HlTypeKind.HBOOL:
+            case HlTypeKind.Void:
+            case HlTypeKind.UI8:
+            case HlTypeKind.UI16:
+            case HlTypeKind.I32:
+            case HlTypeKind.I64:
+            case HlTypeKind.F32:
+            case HlTypeKind.F64:
+            case HlTypeKind.Bool:
                 // These are primitive types with .NET equivalents.
                 return;
 
-            case HlTypeKind.HBYTES:
-            case HlTypeKind.HDYN:
-            case HlTypeKind.HTYPE:
-            case HlTypeKind.HARRAY:
+            case HlTypeKind.Bytes:
+            case HlTypeKind.Dyn:
+            case HlTypeKind.Type:
+            case HlTypeKind.Array:
                 // TODO: These are HL-only primitives, how will we handle them?
                 return;
         }
@@ -133,21 +133,21 @@ public partial class HlCodeCompiler {
 
     private void DefineType(HlType hlType, AssemblyDefinition asmDef) {
         switch (hlType.Kind) {
-            case HlTypeKind.HVOID:
-            case HlTypeKind.HUI8:
-            case HlTypeKind.HUI16:
-            case HlTypeKind.HI32:
-            case HlTypeKind.HI64:
-            case HlTypeKind.HF32:
-            case HlTypeKind.HF64:
-            case HlTypeKind.HBOOL:
+            case HlTypeKind.Void:
+            case HlTypeKind.UI8:
+            case HlTypeKind.UI16:
+            case HlTypeKind.I32:
+            case HlTypeKind.I64:
+            case HlTypeKind.F32:
+            case HlTypeKind.F64:
+            case HlTypeKind.Bool:
                 // These are primitive types with .NET equivalents.
                 return;
 
-            case HlTypeKind.HBYTES:
-            case HlTypeKind.HDYN:
-            case HlTypeKind.HTYPE:
-            case HlTypeKind.HARRAY:
+            case HlTypeKind.Bytes:
+            case HlTypeKind.Dyn:
+            case HlTypeKind.Type:
+            case HlTypeKind.Array:
                 // TODO: These are HL-only primitives, how will we handle them?
                 return;
         }
@@ -170,18 +170,18 @@ public partial class HlCodeCompiler {
 
     private void CompileType(HlType hlType, AssemblyDefinition asmDef) {
         switch (hlType.Kind) {
-            case HlTypeKind.HVOID:
-            case HlTypeKind.HUI8:
-            case HlTypeKind.HUI16:
-            case HlTypeKind.HI32:
-            case HlTypeKind.HI64:
-            case HlTypeKind.HF32:
-            case HlTypeKind.HF64:
-            case HlTypeKind.HBOOL:
-            case HlTypeKind.HBYTES:
-            case HlTypeKind.HDYN:
-            case HlTypeKind.HTYPE:
-            case HlTypeKind.HARRAY:
+            case HlTypeKind.Void:
+            case HlTypeKind.UI8:
+            case HlTypeKind.UI16:
+            case HlTypeKind.I32:
+            case HlTypeKind.I64:
+            case HlTypeKind.F32:
+            case HlTypeKind.F64:
+            case HlTypeKind.Bool:
+            case HlTypeKind.Bytes:
+            case HlTypeKind.Dyn:
+            case HlTypeKind.Type:
+            case HlTypeKind.Array:
                 // These are HL-defined primitive types that we make our own
                 // equivalents for in our stdlib implementation. We skip them
                 // here since they contain not actual information.
@@ -222,81 +222,81 @@ public partial class HlCodeCompiler {
             throw new ArgumentException("Type reference was null.", nameof(typeRef));
 
         switch (type.Kind) {
-            case HlTypeKind.HVOID:
+            case HlTypeKind.Void:
                 return asmDef.MainModule.ImportReference(typeof(HaxeVoid));
 
-            case HlTypeKind.HUI8:
+            case HlTypeKind.UI8:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
                 return asmDef.MainModule.TypeSystem.Byte;
 
-            case HlTypeKind.HUI16:
+            case HlTypeKind.UI16:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeUI16));
                 return asmDef.MainModule.TypeSystem.UInt16;
 
-            case HlTypeKind.HI32:
+            case HlTypeKind.I32:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeI32));
                 return asmDef.MainModule.TypeSystem.Int32;
 
-            case HlTypeKind.HI64:
+            case HlTypeKind.I64:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeI64));
                 return asmDef.MainModule.TypeSystem.UInt32;
 
-            case HlTypeKind.HF32:
+            case HlTypeKind.F32:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeF32));
                 return asmDef.MainModule.TypeSystem.Single;
 
-            case HlTypeKind.HF64:
+            case HlTypeKind.F64:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeF64));
                 return asmDef.MainModule.TypeSystem.Double;
 
-            case HlTypeKind.HBOOL:
+            case HlTypeKind.Bool:
                 // return asmDef.MainModule.ImportReference(typeof(HaxeBool));
                 return asmDef.MainModule.TypeSystem.Boolean;
 
-            case HlTypeKind.HBYTES:
+            case HlTypeKind.Bytes:
                 return asmDef.MainModule.ImportReference(typeof(HaxeBytes));
 
-            case HlTypeKind.HDYN:
+            case HlTypeKind.Dyn:
                 return asmDef.MainModule.ImportReference(typeof(HaxeDyn));
 
-            case HlTypeKind.HFUN:
+            case HlTypeKind.Fun:
                 return funDefs[(HlTypeWithFun)type];
 
-            case HlTypeKind.HOBJ:
+            case HlTypeKind.Obj:
                 return objDefs[(HlTypeWithObj)type];
 
-            case HlTypeKind.HARRAY:
+            case HlTypeKind.Array:
                 return asmDef.MainModule.ImportReference(typeof(HaxeArray));
 
-            case HlTypeKind.HTYPE:
+            case HlTypeKind.Type:
                 return asmDef.MainModule.ImportReference(typeof(HaxeType));
 
-            case HlTypeKind.HREF:
+            case HlTypeKind.Ref:
                 return asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
-            case HlTypeKind.HVIRTUAL:
+            case HlTypeKind.Virtual:
                 return virtDefs[(HlTypeWithVirtual)type];
 
-            case HlTypeKind.HDYNOBJ:
+            case HlTypeKind.DynObj:
                 throw new NotImplementedException();
 
-            case HlTypeKind.HABSTRACT:
+            case HlTypeKind.Abstract:
                 // TODO: Pointers definitely aren't the solution..., but...
                 return asmDef.MainModule.TypeSystem.IntPtr;
 
-            case HlTypeKind.HENUM:
+            case HlTypeKind.Enum:
                 return enumDefs[(HlTypeWithEnum)type];
 
-            case HlTypeKind.HNULL:
+            case HlTypeKind.Null:
                 return asmDef.MainModule.ImportReference(typeof(HaxeNull<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
 
-            case HlTypeKind.HMETHOD:
+            case HlTypeKind.Method:
                 throw new NotImplementedException();
 
-            case HlTypeKind.HSTRUCT:
+            case HlTypeKind.Struct:
                 throw new NotImplementedException();
 
-            case HlTypeKind.HPACKED:
+            case HlTypeKind.Packed:
                 throw new NotImplementedException();
 
             default:

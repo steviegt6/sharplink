@@ -30,7 +30,7 @@ partial class HlCodeCompiler {
         var attr = absNameDefs[type];
 
         // (string name, int[] globals)
-        attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, type.AbsName));
+        attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, type.AbstractName));
 
         if (!absNameGlobals.TryGetValue(type, out var globals))
             globals = new List<int>();
