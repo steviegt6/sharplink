@@ -5,16 +5,6 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    public class CompiledFun {
-        public TypeDefinition Type { get; }
-
-        public CompiledFun(TypeDefinition type) {
-            Type = type;
-        }
-    }
-
-    private Dictionary<HlTypeWithFun, CompiledFun> compiledFuns = new();
-
     private CompiledFun GetCompiledFun(HlTypeWithFun type) {
         return compiledFuns[type];
     }

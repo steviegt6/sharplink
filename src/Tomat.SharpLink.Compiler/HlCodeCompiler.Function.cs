@@ -8,17 +8,6 @@ using Mono.Cecil.Rocks;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    public class CompiledFunction {
-        public MethodDefinition MethodDefinition { get; set; }
-
-        public CompiledFunction(MethodDefinition methodDefinition) {
-            MethodDefinition = methodDefinition;
-        }
-    }
-
-    private Dictionary<HlFunction, CompiledFunction> compiledFunctions = new();
-    private Dictionary<HlNative, CompiledFunction> compiledNativeFunctions = new();
-
     private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
         var method = CreateMethod(native, funType, asmDef);

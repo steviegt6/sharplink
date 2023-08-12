@@ -6,19 +6,6 @@ using Mono.Cecil.Rocks;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    public class CompiledAbstract {
-        public List<int> Globals { get; set; } = new();
-
-        public CustomAttribute Attribute { get; }
-
-        public CompiledAbstract(CustomAttribute attribute) {
-            Attribute = attribute;
-        }
-    }
-
-    private Dictionary<HlTypeWithAbsName, CompiledAbstract> compiledAbstracts = new();
-    private Dictionary<HlTypeWithAbsName, List<int>> absNameGlobals = new();
-
     private CompiledAbstract GetCompiledAbstract(HlTypeWithAbsName type) {
         return compiledAbstracts[type];
     }

@@ -5,34 +5,6 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    public class CompiledEnum {
-        public TypeDefinition Type { get; }
-
-        public MethodDefinition BaseConstructor { get; set; } = null!;
-
-        public Dictionary<HlEnumConstruct, CompiledEnumConstruct> Constructs { get; set; } = new();
-
-        public CompiledEnum(TypeDefinition type) {
-            Type = type;
-        }
-    }
-
-    public class CompiledEnumConstruct {
-        public TypeDefinition Type { get; }
-
-        public MethodDefinition Constructor { get; set; } = null!;
-
-        public List<FieldDefinition> Fields { get; set; } = new();
-
-        public List<ParameterDefinition> ConstructorParameters { get; set; } = new();
-
-        public CompiledEnumConstruct(TypeDefinition type) {
-            Type = type;
-        }
-    }
-
-    private Dictionary<HlTypeWithEnum, CompiledEnum> compiledEnums = new();
-
     private CompiledEnum GetCompiledEnum(HlTypeWithEnum type) {
         return compiledEnums[type];
     }

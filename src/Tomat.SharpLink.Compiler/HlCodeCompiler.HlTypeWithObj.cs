@@ -6,28 +6,6 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    public class CompiledObj {
-        public TypeDefinition Type { get; }
-
-        public Dictionary<HlObjField, FieldDefinition> Fields { get; set; }
-
-        public Dictionary<HlObjProto, FieldDefinition> Protos { get; set; }
-
-        public List<FieldDefinition> AllFields { get; set; } = new();
-
-        public List<FieldDefinition> AllProtos { get; set; } = new();
-
-        public CompiledObj(TypeDefinition type, Dictionary<HlObjField, FieldDefinition> fields, Dictionary<HlObjProto, FieldDefinition> protos) {
-            Type = type;
-            Fields = fields;
-            Protos = protos;
-        }
-    }
-
-    private Dictionary<HlTypeWithObj, CompiledObj> compiledObjs = new();
-    private Dictionary<TypeDefinition, CompiledObj> compiledObjsByType = new();
-    private Dictionary<TypeDefinition, CompiledVirtual> compiledVirtualsByType = new();
-
     private CompiledObj GetCompiledObj(HlTypeWithObj type) {
         return compiledObjs[type];
     }
