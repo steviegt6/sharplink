@@ -5,25 +5,30 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
 
 public abstract class OpcodeEmitter {
-    public HlOpcode Opcode { get; }
+    private readonly EmissionContext context;
 
-    public MethodDefinition Method { get; }
+    public HlOpcode Opcode =>  context.Opcode;
 
-    public List<VariableDefinition> Locals { get; }
+    public MethodDefinition Method => context.Method;
 
-    public Dictionary<int, JumpMarker> Markers { get; }
+    public List<VariableDefinition> Locals => context.Locals;
 
-    public ILProcessor IL { get; }
+    public Dictionary<int, JumpMarker> Markers => context.Markers;
 
-    public int Index { get; }
+    public ILProcessor IL => context.IL;
 
-    protected OpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il, int index) {
-        Opcode = opcode;
-        Method = method;
-        Locals = locals;
-        Markers = markers;
-        IL = il;
-        Index = index;
+    public int Index => context.Index;
+
+    public HlCodeHash Hash => context.Hash;
+
+    public Compilation Compilation => context.Compilation;
+
+    public AssemblyDefinition Assembly => context.Assembly;
+
+    public ModuleDefinition Module => Assembly.MainModule;
+
+    protected OpcodeEmitter(EmissionContext context) {
+        this.context = context;
     }
 
     public abstract void Emit(FunctionEmitter emitter);
@@ -128,12 +133,24 @@ public abstract class OpcodeEmitter {
         }
     }
 
-    private void EmitDynamicTypeConversion(TypeReference from, TypeReference to) {
-        if (to.FullName != "Tomat.SharpLink.HaxeDyn")
+    protected void EmitDynamicTypeConversion(ITypeReferenceProvider fromProvider, ITypeReferenceProvider toProvider) {
+        var from = fromProvider.GetReference(Method, Locals);
+        var to = toProvider.GetReference(Method, Locals);
+
+        // Never going to need conversion between the same types.
+        if (from.FullName == to.FullName)
             return;
 
-        if (from.FullName != to.FullName) {
-            // TODO: handle dynamic conversion here
+        switch (to.FullName) {
+            case "Tomat.SharpLink.HaxeDyn": {
+                var haxeDynCtor = Module.ImportReference(typeof(HaxeDyn).GetConstructor(new[] { typeof(object) }));
+
+                if (from.IsValueType)
+                    IL.Emit(Box);
+
+                IL.Emit(Newobj, haxeDynCtor);
+                break;
+            }
         }
     }
 
@@ -149,11 +166,5 @@ public abstract class OpcodeEmitter {
             EmitArgumentStore(register.AdjustedIndex);
         else
             EmitLocalLoad(register.AdjustedIndex);
-    }
-
-    protected void ConvertLocalRegister(LocalRegister from, LocalRegister to) {
-        var fromType = from.IsParameter ? Method.Parameters[from.AdjustedIndex].ParameterType : Locals[from.AdjustedIndex].VariableType;
-        var toType = to.IsParameter ? Method.Parameters[to.AdjustedIndex].ParameterType : Locals[to.AdjustedIndex].VariableType;
-        EmitDynamicTypeConversion(fromType, toType);
     }
 }

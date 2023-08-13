@@ -56,417 +56,419 @@ public class FunctionEmitter {
     }
 
     private OpcodeEmitter CreateOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il) {
+        var context = new EmissionContext(opcode, method, locals, markers, il, currentOpcodeIndex, hash, compilation, asmDef);
+
         switch (opcode.Kind) {
             case HlOpcodeKind.Mov: {
-                return new MovOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new MovOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Int: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Float: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Bool: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.
             case HlOpcodeKind.Bytes: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.String: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Null: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Add: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Sub: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Mul: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SDiv: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.UDiv: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SMod: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.UMod: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Shl: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SShr: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.UShr: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.And: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Or: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Xor: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Neg: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Not: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Incr: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Decr: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Call0: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Call1: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Call2: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Call3: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Call4: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.CallN: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.CallMethod: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.CallThis: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.CallClosure: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.StaticClosure: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.InstanceClosure: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.VirtualClosure: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetGlobal: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetGlobal: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Field: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetField: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetThis: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetThis: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.DynGet: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.DynSet: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JTrue: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JFalse: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JNull: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JNotNull: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JSLt: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JSGte: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JSGt: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JSLte: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JULt: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JUGte: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JNotLt: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JNotGte: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JEq: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JNotEq: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.JAlways: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ToDyn: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ToSFloat: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ToUFloat: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ToInt: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SafeCast: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.UnsafeCast: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ToVirtual: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Label: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Ret: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Throw: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Rethrow: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Switch: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.NullCheck: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Trap: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.EndTrap: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.GetI8: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetI16: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetMem: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetArray: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.SetI8: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetI16: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetMem: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetArray: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.New: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.ArraySize: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Type: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetType: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.GetTID: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Ref: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Unref: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.Setref: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.MakeEnum: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumAlloc: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumIndex: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.EnumField: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.SetEnumField: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.Assert: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.RefData: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.RefOffset: {
-                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new UnimplementedOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Nop: {
-                return new NopOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+                return new NopOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Last:

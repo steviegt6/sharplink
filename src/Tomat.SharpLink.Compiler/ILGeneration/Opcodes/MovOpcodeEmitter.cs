@@ -1,22 +1,18 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-
-namespace Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
+﻿namespace Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
 
 public sealed class MovOpcodeEmitter : OpcodeEmitter {
     public LocalRegister Dst { get; }
 
     public LocalRegister Src { get; }
 
-    public MovOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il, int index) : base(opcode, method, locals, markers, il, index) {
-        Dst = CreateLocalRegister(opcode.Parameters[0]);
-        Src = CreateLocalRegister(opcode.Parameters[1]);
+    public MovOpcodeEmitter(EmissionContext context) : base(context) {
+        Dst = CreateLocalRegister(Opcode.Parameters[0]);
+        Src = CreateLocalRegister(Opcode.Parameters[1]);
     }
 
     public override void Emit(FunctionEmitter emitter) {
         LoadLocalRegister(Dst);
-        ConvertLocalRegister(Dst, Src);
+        EmitDynamicTypeConversion(Dst, Src);
         StoreLocalRegister(Src);
     }
 }

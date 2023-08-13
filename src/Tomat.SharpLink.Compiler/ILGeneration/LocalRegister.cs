@@ -8,7 +8,7 @@ namespace Tomat.SharpLink.Compiler.ILGeneration;
 ///     A local register, which represents either a method argument or local
 ///     variable.
 /// </summary>
-public struct LocalRegister {
+public struct LocalRegister : ITypeReferenceProvider {
     public int RegisterIndex { get; }
 
     public bool IsParameter { get; }
@@ -19,5 +19,9 @@ public struct LocalRegister {
         RegisterIndex = registerIndex;
         IsParameter = registerIndex < method.Parameters.Count;
         AdjustedIndex = IsParameter ? registerIndex : registerIndex - method.Parameters.Count;
+    }
+
+    TypeReference ITypeReferenceProvider.GetReference(MethodDefinition method, List<VariableDefinition> locals) {
+        return IsParameter ? method.Parameters[AdjustedIndex].ParameterType : locals[AdjustedIndex].VariableType;
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Mono.Cecil;
-using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 

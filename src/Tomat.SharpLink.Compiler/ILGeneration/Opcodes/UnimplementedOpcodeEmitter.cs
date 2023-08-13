@@ -1,13 +1,9 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-
-namespace Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
+﻿namespace Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
 
 public class UnimplementedOpcodeEmitter : OpcodeEmitter {
     private const bool throw_during_emission = false;
 
-    public UnimplementedOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il, int index) : base(opcode, method, locals, markers, il, index) { }
+    public UnimplementedOpcodeEmitter(EmissionContext context) : base(context) { }
 
     public override void Emit(FunctionEmitter emitter) {
         if (throw_during_emission)
