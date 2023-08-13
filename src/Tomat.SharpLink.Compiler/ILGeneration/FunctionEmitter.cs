@@ -208,11 +208,11 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.GetGlobal: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new GetGlobalOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.SetGlobal: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SetGlobalOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Field: {
