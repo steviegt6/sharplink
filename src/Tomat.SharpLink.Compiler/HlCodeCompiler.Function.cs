@@ -511,7 +511,7 @@ partial class HlCodeCompiler {
                 var dst = instruction.Parameters[0];
                 var fun = instruction.Parameters[1];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
@@ -524,7 +524,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var arg = instruction.Parameters[2];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg, def.Parameters[0].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
@@ -539,7 +539,7 @@ partial class HlCodeCompiler {
                 var arg1 = instruction.Parameters[2];
                 var arg2 = instruction.Parameters[3];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -556,7 +556,7 @@ partial class HlCodeCompiler {
                 var arg2 = instruction.Parameters[3];
                 var arg3 = instruction.Parameters[4];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -575,7 +575,7 @@ partial class HlCodeCompiler {
                 var arg3 = instruction.Parameters[4];
                 var arg4 = instruction.Parameters[5];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -592,7 +592,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var args = instruction.Parameters[3..];
 
-                var def = ResolveDefinitionFromFIndex(fun).Method;
+                var def = CompiledFunctionFromFunctionIndex(fun).Method;
 
                 for (var i = 0; i < args.Length; i++)
                     LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i].ParameterType, asmDef);
@@ -1258,19 +1258,15 @@ partial class HlCodeCompiler {
                 break;
             }
 
-            case HlOpcodeKind.Last: {
-                // not a real op-code
-                // throw here maybe?
-                break;
-            }
+            case HlOpcodeKind.Last:
+                throw new InvalidOperationException("Last opcode should not be emitted.");
 
-            default: {
+            default:
                 throw new ArgumentOutOfRangeException(nameof(instruction));
-            }
         }
     }
 
-    private CompiledFunction ResolveDefinitionFromFIndex(int fIndex) {
+    private CompiledFunction CompiledFunctionFromFunctionIndex(int fIndex) {
         var corrected = hash.FunctionIndexes[fIndex];
         return corrected >= hash.Code.Functions.Count
             ? compilation.GetNative(hash.Code.Natives[corrected - hash.Code.Functions.Count])
