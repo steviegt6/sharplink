@@ -37,6 +37,10 @@ public abstract class OpcodeEmitter {
         return new LocalRegister(index, Method, Locals);
     }
 
+    protected GlobalReference CreateGlobalReference(int index) {
+        return new GlobalReference(index);
+    }
+
     private void EmitArgumentLoad(int index) {
         switch (index) {
             case 0:
@@ -281,5 +285,13 @@ public abstract class OpcodeEmitter {
 
     protected void LoadCachedString(int key) {
         IL.Emit(Ldstr, Hash.Code.Strings[key]);
+    }
+
+    protected void LoadGlobal(GlobalReference global) {
+        IL.Emit(Ldsfld, global.GetField(context));
+    }
+
+    protected void StoreGlobal(GlobalReference global) {
+        IL.Emit(Stsfld, global.GetField(context));
     }
 }

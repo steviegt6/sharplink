@@ -8,7 +8,7 @@ namespace Tomat.SharpLink.Compiler.ILGeneration;
 ///     A local register, which represents either a method argument or local
 ///     variable.
 /// </summary>
-public struct LocalRegister : ITypeReferenceProvider {
+public readonly struct LocalRegister : ITypeReferenceProvider {
     public int RegisterIndex { get; }
 
     public bool IsParameter { get; }

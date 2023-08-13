@@ -265,26 +265,6 @@ public static class FunctionCompiler {
             case HlOpcodeKind.VirtualClosure:
                 throw new NotImplementedException();
 
-            // *dst = *a
-            case HlOpcodeKind.GetGlobal: {
-                var dst = instruction.Parameters[0];
-                var a = instruction.Parameters[1];
-
-                LoadGlobal(il, a, asmDef);
-                SetLocal(il, locals, dst);
-                break;
-            }
-
-            // *dst = *a
-            case HlOpcodeKind.SetGlobal: {
-                var dst = instruction.Parameters[0];
-                var a = instruction.Parameters[1];
-
-                LoadLocal(il, locals, a);
-                SetGlobal(il, dst, asmDef);
-                break;
-            }
-
             case HlOpcodeKind.Field: {
                 var dst = instruction.Parameters[0];
                 var obj = instruction.Parameters[1];
