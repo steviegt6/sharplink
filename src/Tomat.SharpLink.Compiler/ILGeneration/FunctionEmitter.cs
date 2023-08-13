@@ -90,71 +90,71 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.Add: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Add);
             }
 
             case HlOpcodeKind.Sub: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Sub);
             }
 
             case HlOpcodeKind.Mul: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Mul);
             }
 
             case HlOpcodeKind.SDiv: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Div);
             }
 
             case HlOpcodeKind.UDiv: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Div);
             }
 
             case HlOpcodeKind.SMod: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Rem);
             }
 
             case HlOpcodeKind.UMod: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Rem);
             }
 
             case HlOpcodeKind.Shl: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Shl);
             }
 
             case HlOpcodeKind.SShr: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Shr);
             }
 
             case HlOpcodeKind.UShr: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Shr);
             }
 
             case HlOpcodeKind.And: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, And);
             }
 
             case HlOpcodeKind.Or: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Or);
             }
 
             case HlOpcodeKind.Xor: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleBinaryMathOpcodeEmitter(context, Xor);
             }
 
             case HlOpcodeKind.Neg: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleUnaryMathOpcodeEmitter(context, Neg);
             }
 
             case HlOpcodeKind.Not: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleUnaryMathOpcodeEmitter(context, Not);
             }
 
             case HlOpcodeKind.Incr: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleUnaryIncrementOpcodeEmitter(context, Add);
             }
 
             case HlOpcodeKind.Decr: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new SimpleUnaryIncrementOpcodeEmitter(context, Sub);
             }
 
             case HlOpcodeKind.Call0: {

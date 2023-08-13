@@ -234,6 +234,22 @@ public abstract class OpcodeEmitter {
         }
     }
 
+    /*protected void EmitNumberConverter(ITypeReferenceProvider leftProvider, ITypeReferenceProvider rightProvider) {
+        var left = leftProvider.GetReference(context);
+        var right = rightProvider.GetReference(context);
+        
+        // UI8
+        // UI16
+        // I32
+        // I64
+        // F32
+        // F64
+        // Priority: u8 -> u16 -> i32 -> i64 -> f32 -> f64
+        var targetNumber = Ldc_I4;
+        if (left.FullName == typeof(byte).FullName || left.FullName == typeof(ushort).FullName || left.FullName == typeof(int).FullName)
+            
+    }*/
+
     protected void LoadLocalRegisterAddress(LocalRegister register) {
         if (register.IsParameter)
             EmitArgumentLoadAddress(register.AdjustedIndex);
