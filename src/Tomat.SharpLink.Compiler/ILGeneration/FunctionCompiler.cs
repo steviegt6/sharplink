@@ -66,15 +66,6 @@ public static class FunctionCompiler {
                 // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.
                 throw new NotImplementedException();
 
-            // *dst = null
-            case HlOpcodeKind.Null: {
-                var destIndex = instruction.Parameters[0];
-
-                il.Emit(Ldnull);
-                SetLocal(il, locals, destIndex);
-                break;
-            }
-
             // *dst = *a + *b
             case HlOpcodeKind.Add: {
                 var dst = instruction.Parameters[0];
@@ -1033,18 +1024,6 @@ public static class FunctionCompiler {
             // TODO: I haven't encountered this being used yet.
             case HlOpcodeKind.RefOffset:
                 throw new NotImplementedException();
-
-            case HlOpcodeKind.Nop: {
-                // Ironically, this is not a nop.
-                il.Emit(Nop);
-                break;
-            }
-
-            case HlOpcodeKind.Last:
-                throw new InvalidOperationException("Last opcode should not be emitted.");
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(instruction));
         }
     }*/
 }

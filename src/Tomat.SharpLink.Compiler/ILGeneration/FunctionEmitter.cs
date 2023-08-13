@@ -333,7 +333,7 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.Ret: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new RetOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Throw: {

@@ -181,6 +181,30 @@ public abstract class OpcodeEmitter {
         }
     }
 
+    private void EmitArgumentLoadAddress(int index) {
+        switch (index) {
+            case < 0xFF:
+                IL.Emit(Ldarga_S, (byte)index);
+                break;
+
+            default:
+                IL.Emit(Ldarga, index);
+                break;
+        }
+    }
+
+    private void EmitLocalLoadAddress(int index) {
+        switch (index) {
+            case < 0xFF:
+                IL.Emit(Ldloca_S, (byte)index);
+                break;
+
+            default:
+                IL.Emit(Ldloca, index);
+                break;
+        }
+    }
+
     protected void EmitDynamicTypeConversion(ITypeReferenceProvider fromProvider, ITypeReferenceProvider toProvider) {
         var from = fromProvider.GetReference(context);
         var to = toProvider.GetReference(context);
@@ -208,6 +232,13 @@ public abstract class OpcodeEmitter {
                 break;
             }
         }
+    }
+
+    protected void LoadLocalRegisterAddress(LocalRegister register) {
+        if (register.IsParameter)
+            EmitArgumentLoadAddress(register.AdjustedIndex);
+        else
+            EmitLocalLoadAddress(register.AdjustedIndex);
     }
 
     protected void LoadLocalRegister(LocalRegister register) {
