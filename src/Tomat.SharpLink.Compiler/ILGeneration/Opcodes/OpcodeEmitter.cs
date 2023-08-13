@@ -133,9 +133,57 @@ public abstract class OpcodeEmitter {
         }
     }
 
+    protected void LoadConstInt(int value) {
+        switch (value) {
+            case -1:
+                IL.Emit(Ldc_I4_M1);
+                break;
+
+            case 0:
+                IL.Emit(Ldc_I4_0);
+                break;
+
+            case 1:
+                IL.Emit(Ldc_I4_1);
+                break;
+
+            case 2:
+                IL.Emit(Ldc_I4_2);
+                break;
+
+            case 3:
+                IL.Emit(Ldc_I4_3);
+                break;
+
+            case 4:
+                IL.Emit(Ldc_I4_4);
+                break;
+
+            case 5:
+                IL.Emit(Ldc_I4_5);
+                break;
+
+            case 6:
+                IL.Emit(Ldc_I4_6);
+                break;
+
+            case 7:
+                IL.Emit(Ldc_I4_7);
+                break;
+
+            case 8:
+                IL.Emit(Ldc_I4_8);
+                break;
+
+            default:
+                IL.Emit(Ldc_I4, value);
+                break;
+        }
+    }
+
     protected void EmitDynamicTypeConversion(ITypeReferenceProvider fromProvider, ITypeReferenceProvider toProvider) {
-        var from = fromProvider.GetReference(Method, Locals);
-        var to = toProvider.GetReference(Method, Locals);
+        var from = fromProvider.GetReference(context);
+        var to = toProvider.GetReference(context);
 
         // Never going to need conversion between the same types.
         if (from.FullName == to.FullName)
@@ -149,6 +197,14 @@ public abstract class OpcodeEmitter {
                     IL.Emit(Box);
 
                 IL.Emit(Newobj, haxeDynCtor);
+                break;
+            }
+
+            case "Tomat.SharpLink.HaxeBytes": {
+                if (from.FullName != typeof(string).FullName)
+                    return;
+
+                IL.Emit(Newobj, Module.ImportReference(typeof(HaxeBytes).GetConstructor(new[] { typeof(string) })));
                 break;
             }
         }
@@ -166,5 +222,17 @@ public abstract class OpcodeEmitter {
             EmitArgumentStore(register.AdjustedIndex);
         else
             EmitLocalStore(register.AdjustedIndex);
+    }
+
+    protected void LoadCachedInt(int key) {
+        LoadConstInt(Hash.Code.Ints[key]);
+    }
+
+    protected void LoadCachedFloat(int key) {
+        IL.Emit(Ldc_R8, Hash.Code.Floats[key]);
+    }
+
+    protected void LoadCachedString(int key) {
+        IL.Emit(Ldstr, Hash.Code.Strings[key]);
     }
 }

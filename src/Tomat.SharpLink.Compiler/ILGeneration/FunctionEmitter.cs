@@ -64,15 +64,15 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.Int: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new IntOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Float: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new FloatOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Bool: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new BoolOpcodeEmitter(context);
             }
 
             // TODO: I haven't encountered this being used yet.
@@ -82,7 +82,7 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.String: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new StringOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Null: {

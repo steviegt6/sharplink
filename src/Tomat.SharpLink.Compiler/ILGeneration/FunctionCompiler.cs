@@ -61,49 +61,6 @@ public static class FunctionCompiler {
             il.Append(marker);
 
         switch (instruction.Kind) {
-            // *dst = *src
-            case HlOpcodeKind.Mov: {
-                var dst = instruction.Parameters[0];
-                var src = instruction.Parameters[1];
-
-                LoadLocal(il, locals, src);
-                SetLocal(il, locals, dst);
-                break;
-            }
-
-            // *dst = ints[key]
-            case HlOpcodeKind.Int: {
-                var dst = instruction.Parameters[0];
-                var key = instruction.Parameters[1];
-
-                PushCached<int>(il, key);
-                // PushConverter<int, HaxeI32>(il, asmDef);
-                SetLocal(il, locals, dst);
-                break;
-            }
-
-            // *dst = floats[key]
-            case HlOpcodeKind.Float: {
-                var destIndex = instruction.Parameters[0];
-                var floatKey = instruction.Parameters[1];
-
-                PushCached<double>(il, floatKey);
-                // PushConverter<double, HaxeF64>(il, asmDef);
-                SetLocal(il, locals, destIndex);
-                break;
-            }
-
-            // *dst = *value != 0
-            case HlOpcodeKind.Bool: {
-                var destIndex = instruction.Parameters[0];
-                var value = instruction.Parameters[1];
-
-                il.Emit(Ldc_I4, value);
-                // PushConverter<int, HaxeBool>(il, asmDef);
-                SetLocal(il, locals, destIndex);
-                break;
-            }
-
             // TODO
             case HlOpcodeKind.Bytes:
                 // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.

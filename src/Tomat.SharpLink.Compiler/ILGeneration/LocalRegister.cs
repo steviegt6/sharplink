@@ -21,7 +21,7 @@ public struct LocalRegister : ITypeReferenceProvider {
         AdjustedIndex = IsParameter ? registerIndex : registerIndex - method.Parameters.Count;
     }
 
-    TypeReference ITypeReferenceProvider.GetReference(MethodDefinition method, List<VariableDefinition> locals) {
-        return IsParameter ? method.Parameters[AdjustedIndex].ParameterType : locals[AdjustedIndex].VariableType;
+    TypeReference ITypeReferenceProvider.GetReference(EmissionContext context) {
+        return IsParameter ? context.Method.Parameters[AdjustedIndex].ParameterType : context.Locals[AdjustedIndex].VariableType;
     }
 }

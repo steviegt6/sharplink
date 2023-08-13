@@ -5,5 +5,5 @@ using Mono.Cecil.Cil;
 namespace Tomat.SharpLink.Compiler.ILGeneration;
 
 public interface ITypeReferenceProvider {
-    TypeReference GetReference(MethodDefinition method, List<VariableDefinition> locals);
+    TypeReference GetReference(EmissionContext context);
 }
