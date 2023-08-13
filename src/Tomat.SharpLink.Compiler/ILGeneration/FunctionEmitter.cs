@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Tomat.SharpLink.Compiler.ILGeneration.Opcodes;
 
 namespace Tomat.SharpLink.Compiler.ILGeneration;
 
@@ -16,6 +17,10 @@ public class FunctionEmitter {
     public HlOpcode[] Opcodes => function.Function!.Opcodes;
 
     public HlOpcode CurrentOpcode => Opcodes[currentOpcodeIndex];
+
+    public List<OpcodeEmitter> TranslatedOpcodes { get; } = new();
+
+    public OpcodeEmitter CurrentTranslatedOpcode => TranslatedOpcodes[currentOpcodeIndex];
 
     public FunctionEmitter(CompiledFunction function, AssemblyDefinition asmDef, HlCodeHash hash, Compilation compilation) {
         if (function.Function is null)
@@ -36,21 +41,438 @@ public class FunctionEmitter {
 
         var il = body.GetILProcessor();
 
-        // Assign every parameter to a local variable corresponding to a
-        // register.
-        for (var i = 0; i < method.Parameters.Count; i++) {
-            var param = method.Parameters[i];
-            il.Emit(Ldarg, param);
-            il.Emit(Stloc, locals[i]);
-        }
-
         var markers = new Dictionary<int, Instruction>();
         for (var i = 0; i < Opcodes.Length; i++)
             markers[i] = il.Create(Nop);
 
-        for (currentOpcodeIndex = 0;  currentOpcodeIndex < Opcodes.Length; currentOpcodeIndex++) {
+        for (currentOpcodeIndex = 0; currentOpcodeIndex < Opcodes.Length; currentOpcodeIndex++)
+            TranslatedOpcodes.Add(CreateOpcodeEmitter(CurrentOpcode, method, locals, markers, il));
+
+        for (currentOpcodeIndex = 0; currentOpcodeIndex < Opcodes.Length; currentOpcodeIndex++) {
             il.Append(markers[currentOpcodeIndex]);
-            // GenerateInstruction(CurrentOpcode, locals, il, asmDef, i, markers, method);
+            CurrentTranslatedOpcode.Emit(this);
+        }
+    }
+
+    private OpcodeEmitter CreateOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, Instruction> markers, ILProcessor il) {
+        switch (opcode.Kind) {
+            case HlOpcodeKind.Mov: {
+                return new MovOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Int: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Float: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Bool: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            // TODO: Uses Bytes and BytePositions I think. Version >= 5 ofc.
+            case HlOpcodeKind.Bytes: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.String: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Null: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Add: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Sub: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Mul: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SDiv: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.UDiv: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SMod: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.UMod: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Shl: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SShr: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.UShr: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.And: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Or: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Xor: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Neg: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Not: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Incr: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Decr: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Call0: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Call1: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Call2: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Call3: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Call4: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.CallN: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.CallMethod: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.CallThis: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.CallClosure: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.StaticClosure: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.InstanceClosure: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.VirtualClosure: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetGlobal: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetGlobal: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Field: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetField: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetThis: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetThis: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.DynGet: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.DynSet: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JTrue: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JFalse: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JNull: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JNotNull: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JSLt: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JSGte: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JSGt: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JSLte: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JULt: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JUGte: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JNotLt: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JNotGte: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JEq: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JNotEq: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.JAlways: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ToDyn: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ToSFloat: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ToUFloat: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ToInt: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SafeCast: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.UnsafeCast: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ToVirtual: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Label: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Ret: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Throw: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Rethrow: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Switch: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.NullCheck: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Trap: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.EndTrap: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.GetI8: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetI16: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetMem: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetArray: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.SetI8: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetI16: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetMem: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.SetArray: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.New: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.ArraySize: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Type: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetType: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.GetTID: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Ref: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Unref: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.Setref: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.MakeEnum: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.EnumAlloc: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.EnumIndex: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.EnumField: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.SetEnumField: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.Assert: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.RefData: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            // TODO: I haven't encountered this being used yet.
+            case HlOpcodeKind.RefOffset: {
+                return new UnimplementedOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Nop: {
+                return new NopOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
+            }
+
+            case HlOpcodeKind.Last:
+                throw new InvalidOperationException("'Last' opcode should not be emitted.");
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(opcode));
         }
     }
 
