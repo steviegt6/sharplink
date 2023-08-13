@@ -86,7 +86,7 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.Null: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new NullOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Add: {
@@ -540,10 +540,10 @@ public class FunctionEmitter {
     private List<VariableDefinition> CreateMethodLocals() {
         var locals = new List<VariableDefinition>();
 
-        // TODO: When I have time to clean up and optimize code, make it so we
-        // don't lazily assign parameters to locals and treat them all like
-        // regular hl registers.
-        foreach (var local in function.Function!.LocalVariables) {
+        var parameters = ((HlTypeWithFun)function.Function!.Type.Value!).FunctionDescription.Arguments;
+
+        for (var i = parameters.Length; i < function.Function!.LocalVariables.Length; i++) {
+            var local = function.Function!.LocalVariables[i];
             var localType = compilation.TypeReferenceFromHlTypeRef(local, asmDef);
             locals.Add(new VariableDefinition(localType));
         }
