@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 using Tomat.SharpLink.Compiler.Collections;
 
 namespace Tomat.SharpLink.Compiler;
@@ -129,5 +130,92 @@ public class Compilation {
             return obj.AllProtos;
 
         throw new KeyNotFoundException($"Could not find compiled object for type {type.FullName}");
+    }
+
+    public TypeReference TypeReferenceFromHlTypeRef(HlTypeRef typeRef, AssemblyDefinition asmDef) {
+        if (typeRef.Value is not { } type)
+            throw new ArgumentException("Type reference was null.", nameof(typeRef));
+
+        switch (type.Kind) {
+            case HlTypeKind.Void:
+                return asmDef.MainModule.ImportReference(typeof(HaxeVoid));
+
+            case HlTypeKind.UI8:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeUI8));
+                return asmDef.MainModule.TypeSystem.Byte;
+
+            case HlTypeKind.UI16:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeUI16));
+                return asmDef.MainModule.TypeSystem.UInt16;
+
+            case HlTypeKind.I32:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeI32));
+                return asmDef.MainModule.TypeSystem.Int32;
+
+            case HlTypeKind.I64:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeI64));
+                return asmDef.MainModule.TypeSystem.UInt32;
+
+            case HlTypeKind.F32:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeF32));
+                return asmDef.MainModule.TypeSystem.Single;
+
+            case HlTypeKind.F64:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeF64));
+                return asmDef.MainModule.TypeSystem.Double;
+
+            case HlTypeKind.Bool:
+                // return asmDef.MainModule.ImportReference(typeof(HaxeBool));
+                return asmDef.MainModule.TypeSystem.Boolean;
+
+            case HlTypeKind.Bytes:
+                return asmDef.MainModule.ImportReference(typeof(HaxeBytes));
+
+            case HlTypeKind.Dyn:
+                return asmDef.MainModule.ImportReference(typeof(HaxeDyn));
+
+            case HlTypeKind.Fun:
+                return GetFun((HlTypeWithFun)type).Type;
+
+            case HlTypeKind.Obj:
+                return GetObj((HlTypeWithObj)type).Type;
+
+            case HlTypeKind.Array:
+                return asmDef.MainModule.ImportReference(typeof(HaxeArray));
+
+            case HlTypeKind.Type:
+                return asmDef.MainModule.ImportReference(typeof(HaxeType));
+
+            case HlTypeKind.Ref:
+                return asmDef.MainModule.ImportReference(typeof(HaxeRef<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
+
+            case HlTypeKind.Virtual:
+                return GetVirtual((HlTypeWithVirtual)type).Type;
+
+            case HlTypeKind.DynObj:
+                throw new NotImplementedException();
+
+            case HlTypeKind.Abstract:
+                // TODO: Pointers definitely aren't the solution..., but...
+                return asmDef.MainModule.TypeSystem.IntPtr;
+
+            case HlTypeKind.Enum:
+                return GetEnum((HlTypeWithEnum)type).Type;
+
+            case HlTypeKind.Null:
+                return asmDef.MainModule.ImportReference(typeof(HaxeNull<>)).MakeGenericInstanceType(TypeReferenceFromHlTypeRef(((HlTypeWithType)typeRef.Value).Type, asmDef));
+
+            case HlTypeKind.Method:
+                throw new NotImplementedException();
+
+            case HlTypeKind.Struct:
+                throw new NotImplementedException();
+
+            case HlTypeKind.Packed:
+                throw new NotImplementedException();
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(typeRef), "Type kind out range.");
+        }
     }
 }

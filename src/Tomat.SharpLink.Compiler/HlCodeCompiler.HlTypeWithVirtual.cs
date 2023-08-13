@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Tomat.SharpLink.Compiler;
 
@@ -32,7 +31,7 @@ partial class HlCodeCompiler {
         var compiled = compilation.GetVirtual(type);
 
         foreach (var field in type.Virtual.Fields) {
-            var fieldType = TypeReferenceFromHlTypeRef(field.Type, asmDef);
+            var fieldType = compilation.TypeReferenceFromHlTypeRef(field.Type, asmDef);
             compiled.Fields.Add(new FieldDefinition(field.Name, FieldAttributes.Public, fieldType));
             compiled.ConstructorParameters.Add(new ParameterDefinition(field.Name, ParameterAttributes.None, fieldType));
         }
@@ -54,12 +53,12 @@ partial class HlCodeCompiler {
             var paramDef = compiled.ConstructorParameters[i];
             compiled.Constructor.Parameters.Add(paramDef);
 
-            ctorDefIl.Emit(OpCodes.Ldarg_0);
-            ctorDefIl.Emit(OpCodes.Ldarg, paramDef);
-            ctorDefIl.Emit(OpCodes.Stfld, fieldDef);
+            ctorDefIl.Emit(Ldarg_0);
+            ctorDefIl.Emit(Ldarg, paramDef);
+            ctorDefIl.Emit(Stfld, fieldDef);
         }
 
-        ctorDefIl.Emit(OpCodes.Ret);
+        ctorDefIl.Emit(Ret);
 
         var emptyCtorDef = new MethodDefinition(
             ".ctor",
@@ -72,8 +71,8 @@ partial class HlCodeCompiler {
         compiled.Type.Methods.Add(emptyCtorDef);
 
         var ctorIl = emptyCtorDef.Body.GetILProcessor();
-        ctorIl.Emit(OpCodes.Ldarg_0);
-        ctorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiled.Type.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
-        ctorIl.Emit(OpCodes.Ret);
+        ctorIl.Emit(Ldarg_0);
+        ctorIl.Emit(Call, asmDef.MainModule.ImportReference(compiled.Type.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
+        ctorIl.Emit(Ret);
     }
 }

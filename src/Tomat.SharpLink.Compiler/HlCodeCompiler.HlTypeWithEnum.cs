@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Tomat.SharpLink.Compiler.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
@@ -57,7 +56,7 @@ partial class HlCodeCompiler {
                 var fieldDef = new FieldDefinition(
                     name,
                     FieldAttributes.Public,
-                    TypeReferenceFromHlTypeRef(construct.Params[i], asmDef)
+                    compilation.TypeReferenceFromHlTypeRef(construct.Params[i], asmDef)
                 );
                 compiledConstruct.Fields.Add(fieldDef);
                 compiledConstruct.ConstructorParameters.Add(new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType));
@@ -74,9 +73,9 @@ partial class HlCodeCompiler {
         compiled.Type.Methods.Add(compiled.BaseConstructor);
 
         var enumCtorIl = compiled.BaseConstructor.Body.GetILProcessor();
-        enumCtorIl.Emit(OpCodes.Ldarg_0);
-        enumCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiled.Type.BaseType.GetDefaultCtor()));
-        enumCtorIl.Emit(OpCodes.Ret);
+        enumCtorIl.Emit(Ldarg_0);
+        enumCtorIl.Emit(Call, asmDef.MainModule.ImportReference(compiled.Type.BaseType.GetDefaultCtor()));
+        enumCtorIl.Emit(Ret);
 
         foreach (var construct in type.Enum.Constructs) {
             var compiledConstruct = compiled.Constructs[construct];
@@ -84,8 +83,8 @@ partial class HlCodeCompiler {
 
             compiledConstruct.Type.Methods.Add(compiledConstruct.Constructor);
             var nestedCtorIl = compiledConstruct.Constructor.Body.GetILProcessor();
-            nestedCtorIl.Emit(OpCodes.Ldarg_0);
-            nestedCtorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiledConstruct.Type.BaseType.GetDefaultCtor()));
+            nestedCtorIl.Emit(Ldarg_0);
+            nestedCtorIl.Emit(Call, asmDef.MainModule.ImportReference(compiledConstruct.Type.BaseType.GetDefaultCtor()));
 
             for (var i = 0; i < construct.Params.Length; i++) {
                 var fieldDef = compiledConstruct.Fields[i];
@@ -94,12 +93,12 @@ partial class HlCodeCompiler {
                 var paramDef = compiledConstruct.ConstructorParameters[i];
                 compiledConstruct.Constructor.Parameters.Add(paramDef);
 
-                nestedCtorIl.Emit(OpCodes.Ldarg_0);
-                nestedCtorIl.Emit(OpCodes.Ldarg, paramDef);
-                nestedCtorIl.Emit(OpCodes.Stfld, fieldDef);
+                nestedCtorIl.Emit(Ldarg_0);
+                nestedCtorIl.Emit(Ldarg, paramDef);
+                nestedCtorIl.Emit(Stfld, fieldDef);
             }
 
-            nestedCtorIl.Emit(OpCodes.Ret);
+            nestedCtorIl.Emit(Ret);
         }
     }
 }
