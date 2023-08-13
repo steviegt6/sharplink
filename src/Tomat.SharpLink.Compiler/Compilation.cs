@@ -1,113 +1,132 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using Mono.Cecil;
+using Tomat.SharpLink.Compiler.Collections;
 
 namespace Tomat.SharpLink.Compiler;
 
 public class Compilation {
-    private readonly Dictionary<HlFunction, CompiledFunction> functions = new();
-    private readonly Dictionary<HlNative, CompiledFunction> natives = new();
+    private readonly MultiKeyDictionary<HlFunction, MethodDefinition, CompiledFunction> functions = new();
+    private readonly MultiKeyDictionary<HlNative, MethodDefinition, CompiledFunction> natives = new();
     private readonly Dictionary<HlTypeWithAbsName, CompiledAbstract> abstracts = new();
-    private readonly Dictionary<HlTypeWithEnum, CompiledEnum> enums = new();
-    private readonly Dictionary<HlTypeWithFun, CompiledFun> funs = new();
-    private readonly Dictionary<HlTypeWithObj, CompiledObj> objs = new();
-    private readonly Dictionary<HlTypeWithVirtual, CompiledVirtual> virtuals = new();
+    private readonly MultiKeyDictionary<HlTypeWithEnum, TypeDefinition, CompiledEnum> enums = new();
+    private readonly MultiKeyDictionary<HlTypeWithFun, TypeDefinition, CompiledFun> funs = new();
+    private readonly MultiKeyDictionary<HlTypeWithObj, TypeDefinition, CompiledObj> objs = new();
+    private readonly MultiKeyDictionary<HlTypeWithVirtual, TypeDefinition, CompiledVirtual> virtuals = new();
 
-    private readonly Dictionary<TypeDefinition, CompiledObj> compiledObjsByType = new();
-    private readonly Dictionary<TypeDefinition, CompiledVirtual> compiledVirtualsByType = new();
-
+#region Function
     public CompiledFunction GetFunction(HlFunction function) {
         return functions[function];
     }
 
+    public CompiledFunction GetFunction(MethodDefinition method) {
+        return functions[method];
+    }
+
+    public void AddFunction(CompiledFunction compiled) {
+        if (compiled.Function is null)
+            throw new NullReferenceException(nameof(compiled.Function));
+
+        functions.Add(compiled.Function, compiled.Method, compiled);
+    }
+#endregion
+
+#region Native
     public CompiledFunction GetNative(HlNative native) {
         return natives[native];
     }
 
-    public CompiledAbstract GetAbstract(HlTypeWithAbsName abs) {
-        return abstracts[abs];
+    public CompiledFunction GetNative(MethodDefinition method) {
+        return natives[method];
     }
 
-    public CompiledEnum GetEnum(HlTypeWithEnum @enum) {
-        return enums[@enum];
+    public void AddNative(CompiledFunction compiled) {
+        if (compiled.Native is null)
+            throw new NullReferenceException(nameof(compiled.Native));
+
+        natives.Add(compiled.Native, compiled.Method, compiled);
+    }
+#endregion
+
+#region Abstract
+    public CompiledAbstract GetAbstract(HlTypeWithAbsName type) {
+        return abstracts[type];
     }
 
-    public CompiledFun GetFun(HlTypeWithFun fun) {
-        return funs[fun];
+    public void AddAbstract(CompiledAbstract compiled) {
+        abstracts.Add(compiled.Abstract, compiled);
+    }
+#endregion
+
+#region Enum
+    public CompiledEnum GetEnum(HlTypeWithEnum type) {
+        return enums[type];
     }
 
-    public CompiledObj GetObj(HlTypeWithObj obj) {
-        return objs[obj];
+    public CompiledEnum GetEnum(TypeDefinition type) {
+        return enums[type];
     }
 
-    public CompiledVirtual GetVirtual(HlTypeWithVirtual @virtual) {
-        return virtuals[@virtual];
+    public void AddEnum(CompiledEnum compiled) {
+        enums.Add(compiled.Enum, compiled.Type, compiled);
+    }
+#endregion
+
+#region Fun
+    public CompiledFun GetFun(HlTypeWithFun type) {
+        return funs[type];
     }
 
-    public void AddFunction(HlFunction function, CompiledFunction compiledFunction) {
-        functions.Add(function, compiledFunction);
+    public CompiledFun GetFun(TypeDefinition type) {
+        return funs[type];
     }
 
-    public void AddNative(HlNative native, CompiledFunction compiledNative) {
-        natives.Add(native, compiledNative);
+    public void AddFun(CompiledFun compiled) {
+        funs.Add(compiled.Fun, compiled.Type, compiled);
+    }
+#endregion
+
+#region Obj
+    public CompiledObj GetObj(HlTypeWithObj type) {
+        return objs[type];
     }
 
-    public void AddAbstract(HlTypeWithAbsName abs, CompiledAbstract compiledAbstract) {
-        abstracts.Add(abs, compiledAbstract);
+    public CompiledObj GetObj(TypeDefinition type) {
+        return objs[type];
     }
 
-    public void AddEnum(HlTypeWithEnum @enum, CompiledEnum compiledEnum) {
-        enums.Add(@enum, compiledEnum);
+    public void AddObj(CompiledObj compiled) {
+        objs.Add(compiled.Obj, compiled.Type, compiled);
+    }
+#endregion
+
+#region Virtual
+    public CompiledVirtual GetVirtual(HlTypeWithVirtual type) {
+        return virtuals[type];
     }
 
-    public void AddFun(HlTypeWithFun fun, CompiledFun compiledFun) {
-        funs.Add(fun, compiledFun);
+    public CompiledVirtual GetVirtual(TypeDefinition type) {
+        return virtuals[type];
     }
 
-    public void AddObj(HlTypeWithObj obj, CompiledObj compiledObj) {
-        objs.Add(obj, compiledObj);
-        compiledObjsByType.Add(compiledObj.Type, compiledObj);
+    public void AddVirtual(CompiledVirtual compiled) {
+        virtuals.Add(compiled.Virtual, compiled.Type, compiled);
     }
-
-    public void AddVirtual(HlTypeWithVirtual @virtual, CompiledVirtual compiledVirtual) {
-        virtuals.Add(@virtual, compiledVirtual);
-        compiledVirtualsByType.Add(compiledVirtual.Type, compiledVirtual);
-    }
+#endregion
 
     public List<FieldDefinition> GetAllFieldsFor(TypeDefinition type) {
-        if (compiledObjsByType.TryGetValue(type, out var compiledObj))
-            return compiledObj.AllFields;
+        if (objs.TryGetValue(type, out var obj))
+            return obj.AllFields;
 
-        compiledObj = objs.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledObj is not null) {
-            compiledObjsByType.Add(type, compiledObj);
-            return compiledObj.AllFields;
-        }
-
-        if (compiledVirtualsByType.TryGetValue(type, out var compiledVirtual))
-            return compiledVirtual.AllFields;
-
-        compiledVirtual = virtuals.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledVirtual is not null) {
-            compiledVirtualsByType.Add(type, compiledVirtual);
-            return compiledVirtual.AllFields;
-        }
+        if (virtuals.TryGetValue(type, out var @virtual))
+            return @virtual.AllFields;
 
         throw new KeyNotFoundException($"Could not find compiled object or virtual for type {type.FullName}");
     }
 
     public List<FieldDefinition> GetAllProtosFor(TypeDefinition type) {
-        if (compiledObjsByType.TryGetValue(type, out var compiledObj))
-            return compiledObj.AllProtos;
-
-        compiledObj = objs.Values.FirstOrDefault(x => x.Type.FullName == type.FullName);
-
-        if (compiledObj is not null) {
-            compiledObjsByType.Add(type, compiledObj);
-            return compiledObj.AllProtos;
-        }
+        if (objs.TryGetValue(type, out var obj))
+            return obj.AllProtos;
 
         throw new KeyNotFoundException($"Could not find compiled object for type {type.FullName}");
     }

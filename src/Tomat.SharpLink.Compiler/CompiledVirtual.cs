@@ -4,18 +4,15 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledVirtual {
-    public TypeDefinition Type { get; }
+    public required HlTypeWithVirtual Virtual { get; init; }
+    
+    public required TypeDefinition Type { get; init; }
 
-    public MethodDefinition BaseConstructor { get; set; }
+    public required MethodDefinition Constructor { get; init; }
 
-    public List<FieldDefinition> Fields { get; set; } = new();
+    public List<FieldDefinition> Fields { get; } = new();
 
-    public List<ParameterDefinition> ConstructorParameters { get; set; } = new();
+    public List<ParameterDefinition> ConstructorParameters { get; } = new();
 
-    public List<FieldDefinition> AllFields { get; set; } = new();
-
-    public CompiledVirtual(TypeDefinition type, MethodDefinition baseConstructor) {
-        Type = type;
-        BaseConstructor = baseConstructor;
-    }
+    public List<FieldDefinition> AllFields { get; } = new();
 }

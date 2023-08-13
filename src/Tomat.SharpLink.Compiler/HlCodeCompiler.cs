@@ -12,8 +12,6 @@ public partial class HlCodeCompiler {
     private readonly Compilation compilation = new();
     private readonly Dictionary<string, int> anonymousTypeCounter = new();
 
-    private Dictionary<HlTypeWithAbsName, List<int>> absNameGlobals = new();
-
     public HlCodeCompiler(HlCodeHash hash) {
         this.hash = hash;
     }
@@ -31,8 +29,6 @@ public partial class HlCodeCompiler {
     }
 
     private void CompileTypes(AssemblyDefinition asmDef) {
-        InitializeAbsNameGlobals();
-
         // Split into three steps.
         //   Resolution:  Makes us aware of types, does the bare minimum for type
         //                definition.
@@ -65,19 +61,12 @@ public partial class HlCodeCompiler {
             var type = value switch {
                 HlTypeWithObj obj => compilation.GetObj(obj).Type,
                 HlTypeWithEnum @enum => compilation.GetEnum(@enum).Type,
-                HlTypeWithAbsName _ => asmDef.MainModule.TypeSystem.IntPtr,
+                HlTypeWithAbsName => asmDef.MainModule.TypeSystem.IntPtr,
                 _ => throw new InvalidOperationException($"Encountered global with unknown type {value.GetType().Name}.")
             };
 
             var globalField = new FieldDefinition($"global{i}", FieldAttributes.Public | FieldAttributes.Static, type);
             asmDef.MainModule.GetType("<Module>").Fields.Add(globalField);
-
-            if (type is not TypeDefinition typeDef)
-                continue;
-
-            var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkGlobalAttribute).GetConstructor(new[] { typeof(int) })));
-            attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.Int32, i));
-            typeDef.CustomAttributes.Add(attr);
         }
     }
 

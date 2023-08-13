@@ -4,13 +4,11 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledEnum {
-    public TypeDefinition Type { get; }
+    public required HlTypeWithEnum Enum { get; init; }
 
-    public MethodDefinition BaseConstructor { get; set; } = null!;
+    public required TypeDefinition Type { get; init; }
 
-    public Dictionary<HlEnumConstruct, CompiledEnumConstruct> Constructs { get; set; } = new();
+    public required MethodDefinition BaseConstructor { get; init; }
 
-    public CompiledEnum(TypeDefinition type) {
-        Type = type;
-    }
+    public Dictionary<HlEnumConstruct, CompiledEnumConstruct> Constructs { get; } = new();
 }

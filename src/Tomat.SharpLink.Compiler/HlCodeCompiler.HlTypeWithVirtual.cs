@@ -6,26 +6,26 @@ namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
     private void ResolveHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
-        var virtDef = CreateAnonymousType(
-            "",
-            TypeAttributes.Class
-          | TypeAttributes.NotPublic
-          | TypeAttributes.Sealed
-          | TypeAttributes.BeforeFieldInit,
-            asmDef.MainModule.TypeSystem.Object,
-            asmDef
-        );
-
-        var ctorDef = new MethodDefinition(
-            ".ctor",
-            MethodAttributes.Public
-          | MethodAttributes.HideBySig
-          | MethodAttributes.SpecialName
-          | MethodAttributes.RTSpecialName,
-            asmDef.MainModule.TypeSystem.Void
-        );
-
-        compilation.AddVirtual(type, new CompiledVirtual(virtDef, ctorDef));
+        compilation.AddVirtual(new CompiledVirtual {
+            Virtual = type,
+            Type = CreateAnonymousType(
+                "",
+                TypeAttributes.Class
+              | TypeAttributes.NotPublic
+              | TypeAttributes.Sealed
+              | TypeAttributes.BeforeFieldInit,
+                asmDef.MainModule.TypeSystem.Object,
+                asmDef
+            ),
+            Constructor = new MethodDefinition(
+                ".ctor",
+                MethodAttributes.Public
+              | MethodAttributes.HideBySig
+              | MethodAttributes.SpecialName
+              | MethodAttributes.RTSpecialName,
+                asmDef.MainModule.TypeSystem.Void
+            ),
+        });
     }
 
     private void DefineHlTypeWithVirtual(HlTypeWithVirtual type, AssemblyDefinition asmDef) {
@@ -49,7 +49,7 @@ partial class HlCodeCompiler {
         var virtDef = compiled.Type;
         asmDef.MainModule.Types.Add(virtDef);
 
-        var ctorDef = compiled.BaseConstructor;
+        var ctorDef = compiled.Constructor;
         virtDef.Methods.Add(ctorDef);
 
         var ctorDefIl = ctorDef.Body.GetILProcessor();

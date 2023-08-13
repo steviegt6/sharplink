@@ -3,9 +3,7 @@
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledFun {
-    public TypeDefinition Type { get; }
+    public required HlTypeWithFun Fun { get; init; }
 
-    public CompiledFun(TypeDefinition type) {
-        Type = type;
-    }
+    public required TypeDefinition Type { get; init; }
 }

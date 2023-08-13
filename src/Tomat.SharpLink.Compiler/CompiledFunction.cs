@@ -3,9 +3,9 @@
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledFunction {
-    public MethodDefinition MethodDefinition { get; set; }
+    public HlFunction? Function { get; init; }
 
-    public CompiledFunction(MethodDefinition methodDefinition) {
-        MethodDefinition = methodDefinition;
-    }
+    public HlNative? Native { get; init; }
+
+    public required MethodDefinition Method { get; init; }
 }

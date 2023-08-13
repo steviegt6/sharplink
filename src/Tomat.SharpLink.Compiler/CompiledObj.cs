@@ -4,19 +4,15 @@ using Mono.Cecil;
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledObj {
-    public TypeDefinition Type { get; }
+    public required HlTypeWithObj Obj { get; init; }
 
-    public Dictionary<HlObjField, FieldDefinition> Fields { get; set; }
+    public required TypeDefinition Type { get; init; }
 
-    public Dictionary<HlObjProto, FieldDefinition> Protos { get; set; }
+    public required Dictionary<HlObjField, FieldDefinition> Fields { get; init; }
 
-    public List<FieldDefinition> AllFields { get; set; } = new();
+    public required Dictionary<HlObjProto, FieldDefinition> Protos { get; init; }
 
-    public List<FieldDefinition> AllProtos { get; set; } = new();
+    public List<FieldDefinition> AllFields { get; } = new();
 
-    public CompiledObj(TypeDefinition type, Dictionary<HlObjField, FieldDefinition> fields, Dictionary<HlObjProto, FieldDefinition> protos) {
-        Type = type;
-        Fields = fields;
-        Protos = protos;
-    }
+    public List<FieldDefinition> AllProtos { get; } = new();
 }

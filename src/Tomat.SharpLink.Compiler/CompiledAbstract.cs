@@ -1,14 +1,9 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 
 namespace Tomat.SharpLink.Compiler;
 
 public class CompiledAbstract {
-    public List<int> Globals { get; set; } = new();
+    public required HlTypeWithAbsName Abstract { get; init; }
 
-    public CustomAttribute Attribute { get; }
-
-    public CompiledAbstract(CustomAttribute attribute) {
-        Attribute = attribute;
-    }
+    public required CustomAttribute Attribute { get; init; }
 }

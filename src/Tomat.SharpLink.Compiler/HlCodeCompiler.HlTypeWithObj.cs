@@ -41,7 +41,12 @@ partial class HlCodeCompiler {
             protoDefs.Add(proto, protoDef);
         }
 
-        compilation.AddObj(type, new CompiledObj(objDef, fieldDefs, protoDefs));
+        compilation.AddObj(new CompiledObj {
+            Obj = type,
+            Type = objDef,
+            Fields = fieldDefs,
+            Protos = protoDefs,
+        });
     }
 
     private void DefineHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {

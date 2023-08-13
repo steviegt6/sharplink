@@ -6,7 +6,10 @@ namespace Tomat.SharpLink.Compiler;
 partial class HlCodeCompiler {
     private void ResolveHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
         var funDelegateDef = CreateAnonymousDelegate(asmDef);
-        compilation.AddFun(type, new CompiledFun(funDelegateDef));
+        compilation.AddFun(new CompiledFun {
+            Fun = type,
+            Type = funDelegateDef,
+        });
     }
 
     private void DefineHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {

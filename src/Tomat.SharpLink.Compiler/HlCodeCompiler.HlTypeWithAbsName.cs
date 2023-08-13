@@ -1,44 +1,22 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
 namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
-    private void InitializeAbsNameGlobals() {
-        foreach (var absName in hash.Code.Globals.Select(x => x.Value).Where(x => x is HlTypeWithAbsName).Cast<HlTypeWithAbsName>())
-            absNameGlobals.Add(absName, new List<int>());
-
-        for (var i = 0; i < hash.Code.Globals.Count; i++) {
-            var global = hash.Code.Globals[i];
-
-            if (global.Value is HlTypeWithAbsName absName)
-                absNameGlobals[absName].Add(i);
-        }
-    }
-
     private void ResolveHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
-        var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string), typeof(int[]) })));
-        compilation.AddAbstract(type, new CompiledAbstract(attr));
+        var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkAbstractAttribute).GetConstructor(new[] { typeof(string) })));
+        compilation.AddAbstract(new CompiledAbstract {
+            Abstract = type,
+            Attribute = attr,
+        });
     }
 
     private void DefineHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {
         var compiled = compilation.GetAbstract(type);
         var attr = compiled.Attribute;
-
-        // (string name, int[] globals)
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, type.AbstractName));
-
-        if (absNameGlobals.TryGetValue(type, out var globals))
-            compiled.Globals = globals;
-
-        attr.ConstructorArguments.Add(
-            new CustomAttributeArgument(
-                asmDef.MainModule.TypeSystem.Int32.MakeArrayType(),
-                compiled.Globals.Select(x => new CustomAttributeArgument(asmDef.MainModule.TypeSystem.Int32, x)).ToArray()
-            )
-        );
     }
 
     private void CompileHlTypeWithAbsName(HlTypeWithAbsName type, AssemblyDefinition asmDef) {

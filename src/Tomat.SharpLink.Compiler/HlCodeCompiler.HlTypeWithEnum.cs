@@ -15,12 +15,6 @@ partial class HlCodeCompiler {
           | TypeAttributes.Abstract,
             asmDef.MainModule.TypeSystem.Object
         );
-        compilation.AddEnum(type, new CompiledEnum(enumDef));
-    }
-
-    private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
-        var compiled = compilation.GetEnum(type);
-
         var enumBaseCtor = new MethodDefinition(
             ".ctor",
             MethodAttributes.Family
@@ -29,18 +23,26 @@ partial class HlCodeCompiler {
           | MethodAttributes.SpecialName,
             asmDef.MainModule.TypeSystem.Void
         );
-        compiled.BaseConstructor = enumBaseCtor;
+        compilation.AddEnum(new CompiledEnum {
+            Enum = type,
+            Type = enumDef,
+            BaseConstructor = enumBaseCtor,
+        });
+    }
+
+    private void DefineHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
+        var compiled = compilation.GetEnum(type);
 
         foreach (var construct in type.Enum.Constructs) {
-            var compiledConstruct = new CompiledEnumConstruct(
-                new TypeDefinition(
+            var compiledConstruct = new CompiledEnumConstruct {
+                Construct = construct,
+                Type = new TypeDefinition(
                     compiled.Type.Namespace ?? "",
                     construct.Name,
                     TypeAttributes.BeforeFieldInit
                   | TypeAttributes.NestedPublic,
                     compiled.Type
-                )
-            ) {
+                ),
                 Constructor = new MethodDefinition(
                     ".ctor",
                     MethodAttributes.Public

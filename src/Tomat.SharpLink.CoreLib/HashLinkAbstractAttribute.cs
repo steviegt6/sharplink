@@ -4,10 +4,7 @@
 public sealed class HashLinkAbstractAttribute : Attribute {
     public string AbstractName { get; }
 
-    public int[] Globals { get; }
-
-    public HashLinkAbstractAttribute(string abstractName, params int[] globals) {
+    public HashLinkAbstractAttribute(string abstractName) {
         AbstractName = abstractName;
-        Globals = globals;
     }
 }

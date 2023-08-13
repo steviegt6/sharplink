@@ -16,12 +16,15 @@ partial class HlCodeCompiler {
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Name));
         method.CustomAttributes.Add(attr);
-        compilation.AddNative(native, new CompiledFunction(method));
+        compilation.AddNative(new CompiledFunction {
+            Native = native,
+            Method = method,
+        });
     }
 
     private void CompileNative(HlNative native, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
-        var method = compilation.GetNative(native).MethodDefinition;
+        var method = compilation.GetNative(native).Method;
 
         var body = method.Body = new MethodBody(method);
         var il = body.GetILProcessor();
@@ -68,12 +71,15 @@ partial class HlCodeCompiler {
     private void DefineFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
         var method = CreateMethod(fun, funType, asmDef);
-        compilation.AddFunction(fun, new CompiledFunction(method));
+        compilation.AddFunction(new CompiledFunction {
+            Function = fun,
+            Method = method,
+        });
     }
 
     private void CompileFunction(HlFunction fun, AssemblyDefinition asmDef) {
         var funType = ((HlTypeWithFun)fun.Type.Value!).FunctionDescription;
-        var method = compilation.GetFunction(fun).MethodDefinition;
+        var method = compilation.GetFunction(fun).Method;
         var locals = CreateMethodLocals(fun, funType, asmDef);
         GenerateMethodBody(method, locals, fun, asmDef);
 
@@ -507,7 +513,7 @@ partial class HlCodeCompiler {
                 var dst = instruction.Parameters[0];
                 var fun = instruction.Parameters[1];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 il.Emit(OpCodes.Call, def);
                 SetLocal(il, locals, dst);
@@ -520,7 +526,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var arg = instruction.Parameters[2];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg, def.Parameters[0].ParameterType, asmDef);
                 il.Emit(OpCodes.Call, def);
@@ -535,7 +541,7 @@ partial class HlCodeCompiler {
                 var arg1 = instruction.Parameters[2];
                 var arg2 = instruction.Parameters[3];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -552,7 +558,7 @@ partial class HlCodeCompiler {
                 var arg2 = instruction.Parameters[3];
                 var arg3 = instruction.Parameters[4];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -571,7 +577,7 @@ partial class HlCodeCompiler {
                 var arg3 = instruction.Parameters[4];
                 var arg4 = instruction.Parameters[5];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg1, def.Parameters[0].ParameterType, asmDef);
                 LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, arg2, def.Parameters[1].ParameterType, asmDef);
@@ -588,7 +594,7 @@ partial class HlCodeCompiler {
                 var fun = instruction.Parameters[1];
                 var args = instruction.Parameters[3..];
 
-                var def = ResolveDefinitionFromFIndex(fun).MethodDefinition;
+                var def = ResolveDefinitionFromFIndex(fun).Method;
 
                 for (var i = 0; i < args.Length; i++)
                     LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, args[i], def.Parameters[i].ParameterType, asmDef);
