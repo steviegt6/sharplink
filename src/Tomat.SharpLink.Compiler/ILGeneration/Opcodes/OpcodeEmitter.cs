@@ -165,6 +165,6 @@ public abstract class OpcodeEmitter {
         if (register.IsParameter)
             EmitArgumentStore(register.AdjustedIndex);
         else
-            EmitLocalLoad(register.AdjustedIndex);
+            EmitLocalStore(register.AdjustedIndex);
     }
 }
