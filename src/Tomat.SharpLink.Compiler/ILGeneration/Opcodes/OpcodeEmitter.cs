@@ -11,13 +11,13 @@ public abstract class OpcodeEmitter {
 
     public List<VariableDefinition> Locals { get; }
 
-    public Dictionary<int, Instruction> Markers { get; }
+    public Dictionary<int, JumpMarker> Markers { get; }
 
     public ILProcessor IL { get; }
 
     public int Index { get; }
 
-    protected OpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, Instruction> markers, ILProcessor il, int index) {
+    protected OpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il, int index) {
         Opcode = opcode;
         Method = method;
         Locals = locals;

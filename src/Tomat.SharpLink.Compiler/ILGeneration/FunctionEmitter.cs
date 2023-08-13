@@ -41,20 +41,21 @@ public class FunctionEmitter {
 
         var il = body.GetILProcessor();
 
-        var markers = new Dictionary<int, Instruction>();
+        var markers = new Dictionary<int, JumpMarker>();
         for (var i = 0; i < Opcodes.Length; i++)
-            markers[i] = il.Create(Nop);
+            markers[i] = new JumpMarker(i, il.Create(Nop));
 
         for (currentOpcodeIndex = 0; currentOpcodeIndex < Opcodes.Length; currentOpcodeIndex++)
             TranslatedOpcodes.Add(CreateOpcodeEmitter(CurrentOpcode, method, locals, markers, il));
 
         for (currentOpcodeIndex = 0; currentOpcodeIndex < Opcodes.Length; currentOpcodeIndex++) {
-            il.Append(markers[currentOpcodeIndex]);
+            if (markers[currentOpcodeIndex].IsReferenced)
+                il.Append(markers[currentOpcodeIndex].Instruction);
             CurrentTranslatedOpcode.Emit(this);
         }
     }
 
-    private OpcodeEmitter CreateOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, Instruction> markers, ILProcessor il) {
+    private OpcodeEmitter CreateOpcodeEmitter(HlOpcode opcode, MethodDefinition method, List<VariableDefinition> locals, Dictionary<int, JumpMarker> markers, ILProcessor il) {
         switch (opcode.Kind) {
             case HlOpcodeKind.Mov: {
                 return new MovOpcodeEmitter(opcode, method, locals, markers, il, currentOpcodeIndex);
