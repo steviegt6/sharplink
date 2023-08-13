@@ -8,7 +8,8 @@ namespace Tomat.SharpLink.Compiler;
 partial class HlCodeCompiler {
     private void ResolveHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Obj.Name, out var ns, out var name);
-        var objDef = new TypeDefinition(
+
+        var objType = new TypeDefinition(
             ns ?? "",
             name,
             TypeAttributes.Class
@@ -17,7 +18,8 @@ partial class HlCodeCompiler {
             asmDef.MainModule.TypeSystem.Object // temporary
         );
 
-        var fieldDefs = new Dictionary<HlObjField, FieldDefinition>();
+        var fields = new Dictionary<HlObjField, FieldDefinition>();
+        var protos = new Dictionary<HlObjProto, FieldDefinition>();
 
         foreach (var field in type.Obj.Fields) {
             var fieldDef = new FieldDefinition(
@@ -25,10 +27,8 @@ partial class HlCodeCompiler {
                 FieldAttributes.Public,
                 asmDef.MainModule.TypeSystem.Object // temporary
             );
-            fieldDefs.Add(field, fieldDef);
+            fields.Add(field, fieldDef);
         }
-
-        var protoDefs = new Dictionary<HlObjProto, FieldDefinition>();
 
         foreach (var proto in type.Obj.Protos) {
             // TODO: Handle property stuff...
@@ -38,47 +38,39 @@ partial class HlCodeCompiler {
               | FieldAttributes.Static,
                 asmDef.MainModule.TypeSystem.Object // temporary
             );
-            protoDefs.Add(proto, protoDef);
+            protos.Add(proto, protoDef);
         }
 
         compilation.AddObj(new CompiledObj {
             Obj = type,
-            Type = objDef,
-            Fields = fieldDefs,
-            Protos = protoDefs,
+            Type = objType,
+            Fields = fields,
+            Protos = protos,
         });
     }
 
     private void DefineHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
         var compiled = compilation.GetObj(type);
-        var objDef = compiled.Type;
-        objDef.BaseType = type.Obj.Super is null ? asmDef.MainModule.TypeSystem.Object : TypeReferenceFromHlTypeRef(type.Obj.Super, asmDef);
+        compiled.Type.BaseType = type.Obj.Super is null ? asmDef.MainModule.TypeSystem.Object : TypeReferenceFromHlTypeRef(type.Obj.Super, asmDef);
 
-        foreach (var field in type.Obj.Fields) {
-            var fieldDef = compiled.Fields[field];
-            fieldDef.FieldType = TypeReferenceFromHlTypeRef(field.Type, asmDef);
-        }
+        foreach (var field in type.Obj.Fields)
+            compiled.Fields[field].FieldType = TypeReferenceFromHlTypeRef(field.Type, asmDef);
 
-        foreach (var proto in type.Obj.Protos) {
-            var protoDef = compiled.Protos[proto];
-            protoDef.FieldType = compilation.GetFun((HlTypeWithFun)hash.Code.Functions[hash.FunctionIndexes[proto.FIndex]].Type.Value!).Type;
-        }
+        foreach (var proto in type.Obj.Protos)
+            compiled.Protos[proto].FieldType = TypeDefinitionFromFunctionIndex(proto.FIndex);
     }
 
     private void CompileHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
         var compiled = compilation.GetObj(type);
-        var objDef = compiled.Type;
-        asmDef.MainModule.Types.Add(objDef);
+        asmDef.MainModule.Types.Add(compiled.Type);
 
-        var fieldDefs = compiled.Fields;
-        foreach (var fieldDef in fieldDefs.Values)
-            objDef.Fields.Add(fieldDef);
+        foreach (var fieldDef in compiled.Fields.Values)
+            compiled.Type.Fields.Add(fieldDef);
 
-        var protoDefs = compiled.Protos;
-        foreach (var protoDef in protoDefs.Values)
-            objDef.Fields.Add(protoDef);
+        foreach (var protoDef in compiled.Protos.Values)
+            compiled.Type.Fields.Add(protoDef);
 
-        void reverseAddAllProtos(HlType? theType, List<FieldDefinition> protoFields) {
+        void reverseAddAllProtos(HlType? theType, ICollection<FieldDefinition> protoFields) {
             if (theType is not HlTypeWithObj theTypeObj)
                 return;
 
@@ -92,7 +84,7 @@ partial class HlCodeCompiler {
         var allProtos = compiled.AllProtos;
         reverseAddAllProtos(type, allProtos);
 
-        void reverseAddAllFields(HlType? theType, List<FieldDefinition> fieldFields) {
+        void reverseAddAllFields(HlType? theType, ICollection<FieldDefinition> fieldFields) {
             if (theType is not HlTypeWithObj theTypeObj)
                 return;
 
@@ -114,11 +106,11 @@ partial class HlCodeCompiler {
           | MethodAttributes.RTSpecialName,
             asmDef.MainModule.TypeSystem.Void
         );
-        objDef.Methods.Add(ctorDef);
+        compiled.Type.Methods.Add(ctorDef);
 
         var ctorIl = ctorDef.Body.GetILProcessor();
         ctorIl.Emit(OpCodes.Ldarg_0);
-        ctorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(objDef.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
+        ctorIl.Emit(OpCodes.Call, asmDef.MainModule.ImportReference(compiled.Type.Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)));
         ctorIl.Emit(OpCodes.Ret);
     }
 }

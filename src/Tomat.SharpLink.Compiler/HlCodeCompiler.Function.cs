@@ -10,8 +10,7 @@ namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
     private void DefineNative(HlNative native, AssemblyDefinition asmDef) {
-        var funType = ((HlTypeWithFun)native.Type.Value!).FunctionDescription;
-        var method = CreateMethod(native, funType, asmDef);
+        var method = CreateMethod(native, ((HlTypeWithFun)native.Type.Value!).FunctionDescription, asmDef);
         var attr = new CustomAttribute(asmDef.MainModule.ImportReference(typeof(HashLinkNativeImport).GetConstructor(new[] { typeof(string), typeof(string) })));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Lib));
         attr.ConstructorArguments.Add(new CustomAttributeArgument(asmDef.MainModule.TypeSystem.String, native.Name));
@@ -29,7 +28,6 @@ partial class HlCodeCompiler {
         var body = method.Body = new MethodBody(method);
         var il = body.GetILProcessor();
 
-        var callNativeMethod = asmDef.MainModule.ImportReference(typeof(SharpLinkNativeCallerHelper).GetMethod("CallNative"));
         var callNativeMethodRef = asmDef.MainModule.ImportReference(typeof(SharpLinkNativeCallerHelper).GetMethod("CallNative", new[] { typeof(string), typeof(string), typeof(object[]) }));
 
         // Make method invoke:

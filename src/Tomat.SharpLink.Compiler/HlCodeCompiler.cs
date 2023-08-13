@@ -323,6 +323,10 @@ public partial class HlCodeCompiler {
         delegateType.Methods.Add(endInvoke);
     }
 
+    private TypeDefinition TypeDefinitionFromFunctionIndex(int fIndex) {
+        return compilation.GetFun((HlTypeWithFun)hash.Code.Functions[hash.FunctionIndexes[fIndex]].Type.Value!).Type;
+    }
+
     private static void ExtractNameAndNamespace(string fullTypeName, out string? @namespace, out string name) {
         var lastDot = fullTypeName.LastIndexOf('.');
 

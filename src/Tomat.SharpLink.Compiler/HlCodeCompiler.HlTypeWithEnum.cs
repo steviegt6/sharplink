@@ -7,26 +7,25 @@ namespace Tomat.SharpLink.Compiler;
 partial class HlCodeCompiler {
     private void ResolveHlTypeWithEnum(HlTypeWithEnum type, AssemblyDefinition asmDef) {
         ExtractNameAndNamespace(type.Enum.Name, out var enumNs, out var enumName);
-        var enumDef = new TypeDefinition(
-            enumNs ?? "",
-            enumName,
-            TypeAttributes.BeforeFieldInit
-          | TypeAttributes.Public
-          | TypeAttributes.Abstract,
-            asmDef.MainModule.TypeSystem.Object
-        );
-        var enumBaseCtor = new MethodDefinition(
-            ".ctor",
-            MethodAttributes.Family
-          | MethodAttributes.HideBySig
-          | MethodAttributes.RTSpecialName
-          | MethodAttributes.SpecialName,
-            asmDef.MainModule.TypeSystem.Void
-        );
+
         compilation.AddEnum(new CompiledEnum {
             Enum = type,
-            Type = enumDef,
-            BaseConstructor = enumBaseCtor,
+            Type = new TypeDefinition(
+                enumNs ?? "",
+                enumName,
+                TypeAttributes.BeforeFieldInit
+              | TypeAttributes.Public
+              | TypeAttributes.Abstract,
+                asmDef.MainModule.TypeSystem.Object
+            ),
+            BaseConstructor = new MethodDefinition(
+                ".ctor",
+                MethodAttributes.Family
+              | MethodAttributes.HideBySig
+              | MethodAttributes.RTSpecialName
+              | MethodAttributes.SpecialName,
+                asmDef.MainModule.TypeSystem.Void
+            ),
         });
     }
 
@@ -53,19 +52,15 @@ partial class HlCodeCompiler {
                 ),
             };
 
-            var paramNumber = 0;
-
-            foreach (var param in construct.Params) {
-                var name = "param" + paramNumber;
+            for (var i = 0; i < construct.Params.Length; i++) {
+                var name = $"param{i}";
                 var fieldDef = new FieldDefinition(
                     name,
                     FieldAttributes.Public,
-                    TypeReferenceFromHlTypeRef(param, asmDef)
+                    TypeReferenceFromHlTypeRef(construct.Params[i], asmDef)
                 );
                 compiledConstruct.Fields.Add(fieldDef);
                 compiledConstruct.ConstructorParameters.Add(new ParameterDefinition(name, ParameterAttributes.None, fieldDef.FieldType));
-
-                paramNumber++;
             }
 
             compiled.Constructs.Add(construct, compiledConstruct);

@@ -5,22 +5,21 @@ namespace Tomat.SharpLink.Compiler;
 
 partial class HlCodeCompiler {
     private void ResolveHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
-        var funDelegateDef = CreateAnonymousDelegate(asmDef);
         compilation.AddFun(new CompiledFun {
             Fun = type,
-            Type = funDelegateDef,
+            Type = CreateAnonymousDelegate(asmDef),
         });
     }
 
     private void DefineHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
-        var funDelegateDef = compilation.GetFun(type).Type;
-        var retType = TypeReferenceFromHlTypeRef(type.FunctionDescription.ReturnType, asmDef);
-        var paramTypes = type.FunctionDescription.Arguments.Select(param => TypeReferenceFromHlTypeRef(param, asmDef)).ToArray();
-        DefineAnonymousDelegate(funDelegateDef, retType, paramTypes, asmDef);
+        var compiled = compilation.GetFun(type);
+        var returnType = TypeReferenceFromHlTypeRef(type.FunctionDescription.ReturnType, asmDef);
+        var parameterTypes = type.FunctionDescription.Arguments.Select(x => TypeReferenceFromHlTypeRef(x, asmDef)).ToArray();
+        DefineAnonymousDelegate(compiled.Type, returnType, parameterTypes, asmDef);
     }
 
     private void CompileHlTypeWithFun(HlTypeWithFun type, AssemblyDefinition asmDef) {
-        var funDelegateDef = compilation.GetFun(type).Type;
-        asmDef.MainModule.Types.Add(funDelegateDef);
+        var compiled = compilation.GetFun(type);
+        asmDef.MainModule.Types.Add(compiled.Type);
     }
 }
