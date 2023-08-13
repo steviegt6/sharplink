@@ -329,7 +329,7 @@ public class FunctionEmitter {
             }
 
             case HlOpcodeKind.Label: {
-                return new UnimplementedOpcodeEmitter(context);
+                return new LabelOpcodeEmitter(context);
             }
 
             case HlOpcodeKind.Ret: {

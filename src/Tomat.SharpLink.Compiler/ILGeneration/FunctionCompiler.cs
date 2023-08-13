@@ -840,23 +840,6 @@ public static class FunctionCompiler {
                 break;
             }
 
-            case HlOpcodeKind.Label: {
-                // no-op
-                il.Emit(Nop);
-                break;
-            }
-
-            case HlOpcodeKind.Ret: {
-                var localIndex = instruction.Parameters[0];
-
-                var varType = locals[localIndex].VariableType.Resolve();
-                var retType = method.ReturnType.Resolve();
-
-                LoadLocalThatMayNeedToBeConvertedToHaxeDyn(il, locals, localIndex, retType, asmDef);
-                il.Emit(Ret);
-                break;
-            }
-
             case HlOpcodeKind.Throw: {
                 var reg = instruction.Parameters[0];
 
