@@ -18,7 +18,7 @@ partial class HlCodeCompiler {
         );
 
         var fields = new Dictionary<HlObjField, FieldDefinition>();
-        var protos = new Dictionary<HlObjProto, FieldDefinition>();
+        var protos = new Dictionary<HlObjProto, MethodDefinition>();
 
         foreach (var field in type.Obj.Fields) {
             var fieldDef = new FieldDefinition(
@@ -31,10 +31,9 @@ partial class HlCodeCompiler {
 
         foreach (var proto in type.Obj.Protos) {
             // TODO: Handle property stuff...
-            var protoDef = new FieldDefinition(
+            var protoDef = new MethodDefinition(
                 proto.Name,
-                FieldAttributes.Public
-              | FieldAttributes.Static,
+                MethodAttributes.Public,
                 asmDef.MainModule.TypeSystem.Object // temporary
             );
             protos.Add(proto, protoDef);
@@ -54,9 +53,6 @@ partial class HlCodeCompiler {
 
         foreach (var field in type.Obj.Fields)
             compiled.Fields[field].FieldType = compilation.TypeReferenceFromHlTypeRef(field.Type, asmDef);
-
-        foreach (var proto in type.Obj.Protos)
-            compiled.Protos[proto].FieldType = TypeDefinitionFromFunctionIndex(proto.FIndex);
     }
 
     private void CompileHlTypeWithObj(HlTypeWithObj type, AssemblyDefinition asmDef) {
@@ -67,9 +63,9 @@ partial class HlCodeCompiler {
             compiled.Type.Fields.Add(fieldDef);
 
         foreach (var protoDef in compiled.Protos.Values)
-            compiled.Type.Fields.Add(protoDef);
+            compiled.Type.Methods.Add(protoDef);
 
-        void reverseAddAllProtos(HlType? theType, ICollection<FieldDefinition> protoFields) {
+        void reverseAddAllProtos(HlType? theType, ICollection<MethodDefinition> protoFields) {
             if (theType is not HlTypeWithObj theTypeObj)
                 return;
 

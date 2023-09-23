@@ -239,7 +239,7 @@ public sealed class HlCode {
                     // this shouldn't be a concern for us.
                     lib: code.GetUString(reader.ReadIndex()),
                     name: code.GetUString(reader.ReadIndex()),
-                    t: code.GetHlTypeRef(reader.ReadIndex()),
+                    typeRef: code.GetHlTypeRef(reader.ReadIndex()),
                     nativeIndex: reader.ReadUIndex()
                 )
             );
@@ -279,8 +279,8 @@ public sealed class HlCode {
                 )
             );
 
-            for (var j = 0; j < constant.Fields!.Length; j++)
-                constant.Fields![j] = reader.ReadUIndex();
+            for (var j = 0; j < constant.Fields.Length; j++)
+                constant.Fields[j] = reader.ReadUIndex();
         }
 
         return code;

@@ -125,7 +125,7 @@ public class Compilation {
         throw new KeyNotFoundException($"Could not find compiled object or virtual for type {type.FullName}");
     }
 
-    public List<FieldDefinition> GetAllProtosFor(TypeDefinition type) {
+    public List<MethodDefinition> GetAllProtosFor(TypeDefinition type) {
         if (objs.TryGetValue(type, out var obj))
             return obj.AllProtos;
 

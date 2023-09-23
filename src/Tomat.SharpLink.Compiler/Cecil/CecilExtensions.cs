@@ -3,21 +3,25 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
-namespace Tomat.SharpLink.Compiler.Cecil; 
+namespace Tomat.SharpLink.Compiler.Cecil;
 
 public static class CecilExtensions {
     public static MethodReference GetDefaultCtor(this TypeReference type) {
-        var resolved = type.Resolve();
-        if (resolved is null)
-            throw new ArgumentException($"Type {type.FullName} could not be resolved.");
+        while (true) {
+            var resolved = type.Resolve();
+            if (resolved is null)
+                throw new ArgumentException($"Type {type.FullName} could not be resolved.");
 
-        var ctor = resolved.Methods.SingleOrDefault(x => x.IsConstructor && x.Parameters.Count == 0 && !x.IsStatic);
-        if (ctor is null)
-            return GetDefaultCtor(resolved.BaseType);
+            var ctor = resolved.Methods.SingleOrDefault(x => x.IsConstructor && x.Parameters.Count == 0 && !x.IsStatic);
 
-        return new MethodReference(".ctor", type.Module.TypeSystem.Void, type) {
-            HasThis = true,
-        };
+            if (ctor is not null) {
+                return new MethodReference(".ctor", type.Module.TypeSystem.Void, type) {
+                    HasThis = true,
+                };
+            }
+
+            type = resolved.BaseType;
+        }
     }
 
     public static MethodReference MakeHostInstanceGeneric(this MethodReference method, params TypeReference[] args) {

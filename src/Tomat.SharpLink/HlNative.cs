@@ -24,10 +24,10 @@ public class HlNative {
     /// </summary>
     public int NativeIndex { get; set; }
 
-    public HlNative(string lib, string name, HlTypeRef t, int nativeIndex) {
+    public HlNative(string lib, string name, HlTypeRef typeRef, int nativeIndex) {
         Lib = lib;
         Name = name;
-        Type = t;
+        Type = typeRef;
         NativeIndex = nativeIndex;
     }
 }

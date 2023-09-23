@@ -10,9 +10,9 @@ public class CompiledObj {
 
     public required Dictionary<HlObjField, FieldDefinition> Fields { get; init; }
 
-    public required Dictionary<HlObjProto, FieldDefinition> Protos { get; init; }
+    public required Dictionary<HlObjProto, MethodDefinition> Protos { get; init; }
 
     public List<FieldDefinition> AllFields { get; } = new();
 
-    public List<FieldDefinition> AllProtos { get; } = new();
+    public List<MethodDefinition> AllProtos { get; } = new();
 }
